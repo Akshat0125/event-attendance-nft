@@ -6,11 +6,18 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-basic = "JAVuBXeBZqXNtS73azhBDAoYaaAFfo4gWXoZe2e7Jf8H"
+event_attendance_nft = "BMwNMcrxpmGu7V9fHpFyGN8dFKt5NrAPNusZSLrUbafz"
+
+[programs.devnet]
+event_attendance_nft = "BMwNMcrxpmGu7V9fHpFyGN8dFKt5NrAPNusZSLrUbafz"
 
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "../node_modules/.bin/jest --preset ts-jest"
+test = "../node_modules/.bin/jest --config jest.config.js"
+
+[[test.genesis]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+program = "mock_metadata/target/deploy/mock_metadata.so"

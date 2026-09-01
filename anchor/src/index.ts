@@ -1,1 +1,1 @@
-export * from './basic-exports'
+export * from './event-attendance-nft-exports'

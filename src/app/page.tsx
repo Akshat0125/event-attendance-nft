@@ -1,5 +1,5 @@
-import { DashboardFeature } from '@/components/dashboard/dashboard-feature'
+import { EventAttendanceNftFeature } from '@/components/event-attendance-nft/event-attendance-nft-feature'
 
 export default function Home() {
-  return <DashboardFeature />
+  return <EventAttendanceNftFeature />
 }

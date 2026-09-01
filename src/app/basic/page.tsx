@@ -1,5 +1,5 @@
-import BasicFeature from '@/components/basic/basic-feature'
+import { EventAttendanceNftFeature } from '@/components/event-attendance-nft/event-attendance-nft-feature'
 
 export default function Page() {
-  return <BasicFeature />
+  return <EventAttendanceNftFeature />
 }
