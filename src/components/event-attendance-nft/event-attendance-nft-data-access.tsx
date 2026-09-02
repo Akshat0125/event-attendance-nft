@@ -168,36 +168,73 @@ export function useEventAttendanceNftProgram() {
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
 
-      // === DIAGNOSTIC STEP 1: Log fully built transaction object ===
-      console.log('=== DIAGNOSTIC STEP 1: TRANSACTION OBJECT ===')
-      console.log('Fee Payer:', transaction.feePayer?.toBase58())
-      console.log('Recent Blockhash:', transaction.recentBlockhash)
-      console.log('Instructions Count:', transaction.instructions.length)
-      console.log('Instruction Keys:', transaction.instructions[0]?.keys.map(k => ({
-        pubkey: k.pubkey.toBase58(),
-        isSigner: k.isSigner,
-        isWritable: k.isWritable,
-      })))
+      // === DIAGNOSTIC STEP 1: Log accounts array in exact order ===
+      const accountNames = [
+        'attendee',
+        'event',
+        'attendanceRecord',
+        'mintAuthority',
+        'mint',
+        'tokenAccount',
+        'metadata',
+        'tokenProgram',
+        'associatedTokenProgram',
+        'metadataProgram',
+        'systemProgram',
+        'rent',
+      ]
+      console.log('=== DIAGNOSTIC STEP 1: INSTRUCTION ACCOUNTS (IN ORDER) ===')
+      transaction.instructions[0]?.keys.forEach((k, idx) => {
+        console.log(`[Account #${idx} ${accountNames[idx] || 'unknown'}]:`, {
+          pubkey: k.pubkey.toBase58(),
+          isSigner: k.isSigner,
+          isWritable: k.isWritable,
+        })
+      })
 
-      // === DIAGNOSTIC STEP 2: Simulate transaction before actual send ===
-      // Partial sign with mintKeypair so simulation has mint signature
-      transaction.partialSign(mintKeypair)
-      console.log('=== DIAGNOSTIC STEP 2: RUNNING SIMULATION ===')
+      // === DIAGNOSTIC STEP 2: Simulate transaction on-chain ===
+      // To get real program execution logs from simulateTransaction without failing signature checks,
+      // we build a simulation-specific copy signed by mintKeypair.
+      console.log('=== DIAGNOSTIC STEP 2: RUNNING RPC SIMULATION ===')
       try {
-        const simResult = await connection.simulateTransaction(transaction)
+        // Clone transaction for simulation
+        const simTx = await program.methods
+          .checkIn()
+          .accounts({
+            attendee,
+            event: eventPda,
+            attendanceRecord: attendancePda,
+            mintAuthority: mintAuthPda,
+            mint: mintKeypair.publicKey,
+            tokenAccount,
+            metadata: metadataPda,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            metadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+          } as any)
+          .transaction()
+
+        simTx.feePayer = attendee
+        simTx.recentBlockhash = blockhash
+        simTx.partialSign(mintKeypair)
+
+        const simResult = await connection.simulateTransaction(simTx)
         console.log('=== DIAGNOSTIC STEP 2: SIMULATION ERR ===', JSON.stringify(simResult.value.err, null, 2))
-        console.log('=== DIAGNOSTIC STEP 2: SIMULATION LOGS ===', simResult.value.logs)
+        console.log('=== DIAGNOSTIC STEP 2: REAL ON-CHAIN PROGRAM LOGS ===')
+        if (simResult.value.logs) {
+          simResult.value.logs.forEach((line, idx) => console.log(`LOG ${idx}: ${line}`))
+        } else {
+          console.log('No simulation logs returned. simResult:', simResult.value)
+        }
       } catch (simErr) {
         console.error('=== DIAGNOSTIC STEP 2: SIMULATION EXECUTION ERROR ===', simErr)
       }
 
-      // === DIAGNOSTIC STEP 3: Signer Check ===
-      console.log('=== DIAGNOSTIC STEP 3: SIGNER CHECK ===')
-      console.log('Mint Keypair Pubkey:', mintKeypair.publicKey.toBase58())
-      console.log('Signatures in Tx:', transaction.signatures.map(s => ({
-        pubkey: s.publicKey?.toBase58(),
-        hasSignature: !!s.signature,
-      })))
+      // === DIAGNOSTIC STEP 3: Signer Verification ===
+      console.log('=== DIAGNOSTIC STEP 3: SIGNERS ===')
+      console.log('Mint Keypair:', mintKeypair.publicKey.toBase58())
 
       try {
         const signature = await wallet.sendTransaction(transaction, connection, {
@@ -210,13 +247,15 @@ export function useEventAttendanceNftProgram() {
         if (typeof sendErr?.getLogs === 'function') {
           try {
             const logs = await sendErr.getLogs()
-            console.log('=== RAW PROGRAM LOGS FROM getLogs() ===', logs)
+            console.log('=== RAW PROGRAM LOGS FROM getLogs() ===')
+            logs.forEach((l: string, i: number) => console.log(`SEND LOG ${i}: ${l}`))
           } catch (logErr) {
             console.error('Failed to call getLogs():', logErr)
           }
         }
         if (sendErr?.logs) {
-          console.log('=== RAW PROGRAM LOGS FROM sendErr.logs ===', sendErr.logs)
+          console.log('=== RAW PROGRAM LOGS FROM sendErr.logs ===')
+          sendErr.logs.forEach((l: string, i: number) => console.log(`SEND LOG ${i}: ${l}`))
         }
         throw sendErr
       }
