@@ -27,7 +27,7 @@ export function AccountBalance({ address }: { address: PublicKey }) {
   const query = useGetBalance({ address })
 
   return (
-    <h1 className="text-5xl font-bold cursor-pointer" onClick={() => query.refetch()}>
+    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold cursor-pointer break-all" onClick={() => query.refetch()}>
       {query.data ? <BalanceSol balance={query.data} /> : '...'} SOL
     </h1>
   )
@@ -113,9 +113,9 @@ export function AccountTokens({ address }: { address: PublicKey }) {
       </div>
       {query.isError && <pre className="alert alert-error">Error: {query.error?.message.toString()}</pre>}
       {query.isSuccess && (
-        <div>
+        <div className="overflow-x-auto w-full rounded-lg border border-neutral-200 dark:border-neutral-800">
           {query.data.length === 0 ? (
-            <div>No token accounts found.</div>
+            <div className="p-4 text-sm text-neutral-500">No token accounts found.</div>
           ) : (
             <Table>
               <TableHeader>
@@ -130,14 +130,14 @@ export function AccountTokens({ address }: { address: PublicKey }) {
                   <TableRow key={pubkey.toString()}>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <span className="font-mono">
+                        <span className="font-mono text-xs sm:text-sm">
                           <ExplorerLink label={ellipsify(pubkey.toString())} path={`account/${pubkey.toString()}`} />
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <span className="font-mono">
+                        <span className="font-mono text-xs sm:text-sm">
                           <ExplorerLink
                             label={ellipsify(account.data.parsed.info.mint)}
                             path={`account/${account.data.parsed.info.mint.toString()}`}
@@ -146,7 +146,7 @@ export function AccountTokens({ address }: { address: PublicKey }) {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="font-mono">{account.data.parsed.info.tokenAmount.uiAmount}</span>
+                      <span className="font-mono text-xs sm:text-sm">{account.data.parsed.info.tokenAmount.uiAmount}</span>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -194,9 +194,9 @@ export function AccountTransactions({ address }: { address: PublicKey }) {
       </div>
       {query.isError && <pre className="alert alert-error">Error: {query.error?.message.toString()}</pre>}
       {query.isSuccess && (
-        <div>
+        <div className="overflow-x-auto w-full rounded-lg border border-neutral-200 dark:border-neutral-800">
           {query.data.length === 0 ? (
-            <div>No transactions found.</div>
+            <div className="p-4 text-sm text-neutral-500">No transactions found.</div>
           ) : (
             <Table>
               <TableHeader>
@@ -210,14 +210,14 @@ export function AccountTransactions({ address }: { address: PublicKey }) {
               <TableBody>
                 {items?.map((item) => (
                   <TableRow key={item.signature}>
-                    <TableHead className="font-mono">
+                    <TableHead className="font-mono text-xs sm:text-sm">
                       <ExplorerLink path={`tx/${item.signature}`} label={ellipsify(item.signature, 8)} />
                     </TableHead>
-                    <TableCell className="font-mono text-right">
+                    <TableCell className="font-mono text-right text-xs sm:text-sm">
                       <ExplorerLink path={`block/${item.slot}`} label={item.slot.toString()} />
                     </TableCell>
-                    <TableCell>{new Date((item.blockTime ?? 0) * 1000).toISOString()}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-xs sm:text-sm">{new Date((item.blockTime ?? 0) * 1000).toISOString()}</TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm">
                       {item.err ? (
                         <span className="text-red-500" title={item.err.toString()}>
                           Failed
