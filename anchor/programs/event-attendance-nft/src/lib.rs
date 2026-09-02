@@ -53,7 +53,10 @@ pub mod event_attendance_nft {
         mint_to(mint_cpi_ctx, 1)?;
 
         // 2. CPI into Metaplex Token Metadata to attach metadata
-        let metadata_name = format!("{} — Attendance Badge", ctx.accounts.event.name);
+        let suffix = " Badge";
+        let max_event_chars = 32 - suffix.len(); // 26 chars
+        let truncated_name: String = ctx.accounts.event.name.chars().take(max_event_chars).collect();
+        let metadata_name = format!("{}{}", truncated_name, suffix);
         let data_v2 = DataV2 {
             name: metadata_name,
             symbol: "BADGE".to_string(),
