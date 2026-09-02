@@ -36,6 +36,13 @@ export function useEventAttendanceNftProgram() {
         programId
       )
 
+      // Pre-check if event account already exists
+      const existing = await connection.getAccountInfo(eventPda)
+      if (existing !== null) {
+        toast.info(`Event "${name}" already exists on-chain! You can proceed directly to Check-In.`)
+        return { signature: '', eventPda, alreadyExists: true }
+      }
+
       const signature = await program.methods
         .createEvent(name)
         .accounts({
@@ -45,19 +52,23 @@ export function useEventAttendanceNftProgram() {
         } as any)
         .rpc()
 
-      return { signature, eventPda }
+      return { signature, eventPda, alreadyExists: false }
     },
-    onSuccess: ({ signature, eventPda }) => {
-      transactionToast(signature)
-      toast.success(`Event created successfully! PDA: ${eventPda.toBase58().slice(0, 8)}...`)
+    onSuccess: ({ signature, eventPda, alreadyExists }) => {
+      if (!alreadyExists && signature) {
+        transactionToast(signature)
+        toast.success(`Event created successfully! PDA: ${eventPda.toBase58().slice(0, 8)}...`)
+      }
     },
     onError: (err: any) => {
       console.error('CreateEvent Error:', err)
       const msg = err?.message || ''
-      if (msg.includes('Blockhash not found') || msg.includes('Simulation failed')) {
-        toast.error('Simulation failed: Please ensure top-right cluster in header is set to "devnet"!')
+      if (msg.includes('already in use') || err?.logs?.some((l: string) => l.includes('already in use'))) {
+        toast.info('Event already exists on-chain! Proceed directly to Check-In.')
+      } else if (msg.includes('Blockhash not found') || msg.includes('Simulation failed')) {
+        toast.error('Simulation failed: Please ensure top-right cluster is set to "devnet" and your wallet has Devnet SOL!')
       } else if (msg.includes('User rejected')) {
-        toast.error('Transaction rejected in wallet.')
+        toast.error('Transaction cancelled/rejected in Phantom wallet.')
       } else {
         toast.error(msg || 'Failed to create event')
       }
@@ -76,6 +87,12 @@ export function useEventAttendanceNftProgram() {
         [Buffer.from('event'), organizer.toBuffer(), Buffer.from(eventName)],
         programId
       )
+
+      // Pre-check if event account exists
+      const eventAccountInfo = await connection.getAccountInfo(eventPda)
+      if (!eventAccountInfo) {
+        throw new Error(`Event "${eventName}" does not exist on-chain for organizer ${organizer.toBase58().slice(0, 8)}... Create the event first!`)
+      }
 
       const [attendancePda] = PublicKey.findProgramAddressSync(
         [Buffer.from('attendance'), eventPda.toBuffer(), attendee.toBuffer()],
@@ -128,9 +145,9 @@ export function useEventAttendanceNftProgram() {
       if (msg.includes('already in use') || err?.logs?.some((l: string) => l.includes('already in use'))) {
         toast.error('Already checked in for this event! Badges are 1 per attendee.')
       } else if (msg.includes('Blockhash not found') || msg.includes('Simulation failed')) {
-        toast.error('Simulation failed: Please ensure top-right cluster is set to "devnet" and Event has been created first!')
+        toast.error('Simulation failed: Please ensure top-right cluster is set to "devnet" and your wallet has Devnet SOL!')
       } else if (msg.includes('User rejected')) {
-        toast.error('Transaction rejected in wallet.')
+        toast.error('Transaction cancelled/rejected in Phantom wallet.')
       } else {
         toast.error(msg || 'Failed to check in')
       }
