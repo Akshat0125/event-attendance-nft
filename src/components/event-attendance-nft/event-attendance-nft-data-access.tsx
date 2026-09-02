@@ -52,8 +52,15 @@ export function useEventAttendanceNftProgram() {
       toast.success(`Event created successfully! PDA: ${eventPda.toBase58().slice(0, 8)}...`)
     },
     onError: (err: any) => {
-      console.error(err)
-      toast.error(err?.message || 'Failed to create event')
+      console.error('CreateEvent Error:', err)
+      const msg = err?.message || ''
+      if (msg.includes('Blockhash not found') || msg.includes('Simulation failed')) {
+        toast.error('Simulation failed: Please ensure top-right cluster in header is set to "devnet"!')
+      } else if (msg.includes('User rejected')) {
+        toast.error('Transaction rejected in wallet.')
+      } else {
+        toast.error(msg || 'Failed to create event')
+      }
     },
   })
 
@@ -116,11 +123,16 @@ export function useEventAttendanceNftProgram() {
       toast.success(`Checked in & Soulbound Badge Minted! Mint: ${mint.toBase58().slice(0, 8)}...`)
     },
     onError: (err: any) => {
-      console.error(err)
-      if (err?.message?.includes('already in use') || err?.logs?.some((l: string) => l.includes('already in use'))) {
+      console.error('CheckIn Error:', err)
+      const msg = err?.message || ''
+      if (msg.includes('already in use') || err?.logs?.some((l: string) => l.includes('already in use'))) {
         toast.error('Already checked in for this event! Badges are 1 per attendee.')
+      } else if (msg.includes('Blockhash not found') || msg.includes('Simulation failed')) {
+        toast.error('Simulation failed: Please ensure top-right cluster is set to "devnet" and Event has been created first!')
+      } else if (msg.includes('User rejected')) {
+        toast.error('Transaction rejected in wallet.')
       } else {
-        toast.error(err?.message || 'Failed to check in')
+        toast.error(msg || 'Failed to check in')
       }
     },
   })
