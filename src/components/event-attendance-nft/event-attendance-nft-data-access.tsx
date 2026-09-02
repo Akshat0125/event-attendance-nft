@@ -26,11 +26,19 @@ export function useEventAttendanceNftProgram() {
       : EVENT_ATTENDANCE_NFT_PROGRAM_ID
   }, [])
 
-  const program = useMemo(() => getEventAttendanceNftProgram(provider, programId), [provider, programId])
+  const program = useMemo(() => {
+    if (!provider) return null
+    return getEventAttendanceNftProgram(provider, programId)
+  }, [provider, programId])
 
   const createEvent = useMutation({
     mutationKey: ['event-attendance-nft', 'create-event', { cluster }],
     mutationFn: async ({ name, organizer }: { name: string; organizer: PublicKey }) => {
+      if (!program) {
+        toast.error('Wallet not connected! Please connect Phantom wallet first.')
+        throw new Error('Wallet not connected')
+      }
+
       const [eventPda] = PublicKey.findProgramAddressSync(
         [Buffer.from('event'), organizer.toBuffer(), Buffer.from(name)],
         programId
@@ -78,7 +86,10 @@ export function useEventAttendanceNftProgram() {
   const checkIn = useMutation({
     mutationKey: ['event-attendance-nft', 'check-in', { cluster }],
     mutationFn: async ({ eventName, organizer }: { eventName: string; organizer: PublicKey }) => {
-      if (!wallet.publicKey) throw new Error('Wallet not connected')
+      if (!program || !wallet.publicKey) {
+        toast.error('Wallet not connected! Please connect Phantom wallet first.')
+        throw new Error('Wallet not connected')
+      }
 
       const attendee = wallet.publicKey
       const mintKeypair = Keypair.generate()
