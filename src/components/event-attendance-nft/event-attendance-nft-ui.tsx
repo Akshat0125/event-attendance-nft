@@ -21,7 +21,7 @@ export function EventAttendanceNftUi() {
   const [checkInEventName, setCheckInEventName] = useState('Solana Breakpoint 2026')
   const [organizerAddress, setOrganizerAddress] = useState('')
 
-  const ipfsBadgeUri = process.env.NEXT_PUBLIC_IPFS_BADGE_URI || 'ipfs://bafkreicx64pyp22n77a4a2wnd3gsq2zpxxxxxxxxxx/metadata.json'
+  const ipfsBadgeUri = process.env.NEXT_PUBLIC_BADGE_URI || process.env.NEXT_PUBLIC_IPFS_BADGE_URI || 'ipfs://QmEventAttendanceBadgeFixedUri/metadata.json'
 
   const handleCreateEvent = () => {
     if (!publicKey) return
