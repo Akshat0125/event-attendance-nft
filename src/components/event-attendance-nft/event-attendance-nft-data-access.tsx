@@ -64,6 +64,20 @@ export function useEventAttendanceNftProgram() {
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
 
+      console.log('=== DIAGNOSTIC (createEvent) STEP 1: TRANSACTION ===', {
+        feePayer: transaction.feePayer?.toBase58(),
+        recentBlockhash: transaction.recentBlockhash,
+      })
+      try {
+        const simResult = await connection.simulateTransaction(transaction)
+        console.log('=== DIAGNOSTIC (createEvent) STEP 2: SIMULATION ===', {
+          err: simResult.value.err,
+          logs: simResult.value.logs,
+        })
+      } catch (simErr) {
+        console.error('=== DIAGNOSTIC (createEvent) SIMULATION ERROR ===', simErr)
+      }
+
       const signature = await wallet.sendTransaction(transaction, connection)
       await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
 
@@ -153,6 +167,40 @@ export function useEventAttendanceNftProgram() {
       transaction.feePayer = attendee
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
+
+      // === DIAGNOSTIC STEP 1: Log fully built transaction object ===
+      console.log('=== DIAGNOSTIC STEP 1: TRANSACTION OBJECT ===')
+      console.log('Fee Payer:', transaction.feePayer?.toBase58())
+      console.log('Recent Blockhash:', transaction.recentBlockhash)
+      console.log('Instructions Count:', transaction.instructions.length)
+      console.log('Instruction Keys:', transaction.instructions[0]?.keys.map(k => ({
+        pubkey: k.pubkey.toBase58(),
+        isSigner: k.isSigner,
+        isWritable: k.isWritable,
+      })))
+
+      // === DIAGNOSTIC STEP 2: Simulate transaction before actual send ===
+      // Partial sign with mintKeypair so simulation has mint signature
+      transaction.partialSign(mintKeypair)
+      console.log('=== DIAGNOSTIC STEP 2: RUNNING SIMULATION ===')
+      try {
+        const simResult = await connection.simulateTransaction(transaction)
+        console.log('=== DIAGNOSTIC STEP 2: SIMULATION RESULT ===', {
+          err: simResult.value.err,
+          logs: simResult.value.logs,
+          unitsConsumed: simResult.value.unitsConsumed,
+        })
+      } catch (simErr) {
+        console.error('=== DIAGNOSTIC STEP 2: SIMULATION EXECUTION ERROR ===', simErr)
+      }
+
+      // === DIAGNOSTIC STEP 3: Signer Check ===
+      console.log('=== DIAGNOSTIC STEP 3: SIGNER CHECK ===')
+      console.log('Mint Keypair Pubkey:', mintKeypair.publicKey.toBase58())
+      console.log('Signatures in Tx:', transaction.signatures.map(s => ({
+        pubkey: s.publicKey?.toBase58(),
+        hasSignature: !!s.signature,
+      })))
 
       const signature = await wallet.sendTransaction(transaction, connection, {
         signers: [mintKeypair],
