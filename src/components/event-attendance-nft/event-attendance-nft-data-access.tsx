@@ -185,11 +185,8 @@ export function useEventAttendanceNftProgram() {
       console.log('=== DIAGNOSTIC STEP 2: RUNNING SIMULATION ===')
       try {
         const simResult = await connection.simulateTransaction(transaction)
-        console.log('=== DIAGNOSTIC STEP 2: SIMULATION RESULT ===', {
-          err: simResult.value.err,
-          logs: simResult.value.logs,
-          unitsConsumed: simResult.value.unitsConsumed,
-        })
+        console.log('=== DIAGNOSTIC STEP 2: SIMULATION ERR ===', JSON.stringify(simResult.value.err, null, 2))
+        console.log('=== DIAGNOSTIC STEP 2: SIMULATION LOGS ===', simResult.value.logs)
       } catch (simErr) {
         console.error('=== DIAGNOSTIC STEP 2: SIMULATION EXECUTION ERROR ===', simErr)
       }
@@ -202,12 +199,27 @@ export function useEventAttendanceNftProgram() {
         hasSignature: !!s.signature,
       })))
 
-      const signature = await wallet.sendTransaction(transaction, connection, {
-        signers: [mintKeypair],
-      })
-      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
-
-      return { signature, mint: mintKeypair.publicKey, attendancePda }
+      try {
+        const signature = await wallet.sendTransaction(transaction, connection, {
+          signers: [mintKeypair],
+        })
+        await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
+        return { signature, mint: mintKeypair.publicKey, attendancePda }
+      } catch (sendErr: any) {
+        console.error('=== RAW SEND TRANSACTION ERROR ===', sendErr)
+        if (typeof sendErr?.getLogs === 'function') {
+          try {
+            const logs = await sendErr.getLogs()
+            console.log('=== RAW PROGRAM LOGS FROM getLogs() ===', logs)
+          } catch (logErr) {
+            console.error('Failed to call getLogs():', logErr)
+          }
+        }
+        if (sendErr?.logs) {
+          console.log('=== RAW PROGRAM LOGS FROM sendErr.logs ===', sendErr.logs)
+        }
+        throw sendErr
+      }
     },
     onSuccess: ({ signature, mint }) => {
       transactionToast(signature)
