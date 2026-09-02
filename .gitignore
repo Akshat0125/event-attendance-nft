@@ -42,7 +42,11 @@ next-env.d.ts
 
 # Anchor
 /anchor/.anchor
-/anchor/target
+/anchor/target/*
+!/anchor/target/idl
+!/anchor/target/idl/*.json
+!/anchor/target/types
+!/anchor/target/types/*.ts
 /anchor/mock_metadata/target
 test-ledger
 **/*.rs.bk
