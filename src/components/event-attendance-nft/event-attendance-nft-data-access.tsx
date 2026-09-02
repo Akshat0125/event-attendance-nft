@@ -34,7 +34,7 @@ export function useEventAttendanceNftProgram() {
   const createEvent = useMutation({
     mutationKey: ['event-attendance-nft', 'create-event', { cluster }],
     mutationFn: async ({ name, organizer }: { name: string; organizer: PublicKey }) => {
-      if (!program) {
+      if (!program || !wallet.sendTransaction) {
         toast.error('Wallet not connected! Please connect Phantom wallet first.')
         throw new Error('Wallet not connected')
       }
@@ -51,14 +51,17 @@ export function useEventAttendanceNftProgram() {
         return { signature: '', eventPda, alreadyExists: true }
       }
 
-      const signature = await program.methods
+      const transaction = await program.methods
         .createEvent(name)
         .accounts({
           organizer,
           event: eventPda,
           systemProgram: SystemProgram.programId,
         } as any)
-        .rpc()
+        .transaction()
+
+      const signature = await wallet.sendTransaction(transaction, connection)
+      await connection.confirmTransaction(signature, 'confirmed')
 
       return { signature, eventPda, alreadyExists: false }
     },
@@ -86,7 +89,7 @@ export function useEventAttendanceNftProgram() {
   const checkIn = useMutation({
     mutationKey: ['event-attendance-nft', 'check-in', { cluster }],
     mutationFn: async ({ eventName, organizer }: { eventName: string; organizer: PublicKey }) => {
-      if (!program || !wallet.publicKey) {
+      if (!program || !wallet.publicKey || !wallet.sendTransaction) {
         toast.error('Wallet not connected! Please connect Phantom wallet first.')
         throw new Error('Wallet not connected')
       }
@@ -125,7 +128,7 @@ export function useEventAttendanceNftProgram() {
         TOKEN_METADATA_PROGRAM_ID
       )
 
-      const signature = await program.methods
+      const transaction = await program.methods
         .checkIn()
         .accounts({
           attendee,
@@ -141,8 +144,12 @@ export function useEventAttendanceNftProgram() {
           systemProgram: SystemProgram.programId,
           rent: SYSVAR_RENT_PUBKEY,
         } as any)
-        .signers([mintKeypair])
-        .rpc()
+        .transaction()
+
+      const signature = await wallet.sendTransaction(transaction, connection, {
+        signers: [mintKeypair],
+      })
+      await connection.confirmTransaction(signature, 'confirmed')
 
       return { signature, mint: mintKeypair.publicKey, attendancePda }
     },
