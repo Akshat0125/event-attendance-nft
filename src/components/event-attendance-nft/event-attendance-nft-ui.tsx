@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { WalletButton } from '@/components/solana/solana-provider'
-import { ShieldCheck, Award, Calendar, CheckCircle2, Lock } from 'lucide-react'
+import { useCluster } from '../cluster/cluster-data-access'
+import { ShieldCheck, Award, Calendar, CheckCircle2, Lock, AlertTriangle } from 'lucide-react'
 
 export function EventAttendanceNftUi() {
   const { publicKey } = useWallet()
   const { programId, createEvent, checkIn } = useEventAttendanceNftProgram()
+  const { cluster, setCluster, clusters } = useCluster()
 
   // Organizer state
   const [eventName, setEventName] = useState('Solana Breakpoint 2026')
@@ -36,6 +38,28 @@ export function EventAttendanceNftUi() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-6">
+      {/* Cluster Warning Banner */}
+      {cluster.name !== 'devnet' && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-amber-200 text-sm">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-semibold text-white">Cluster Mismatch Warning:</span> Current dApp cluster is <code className="bg-amber-950 px-1.5 py-0.5 rounded font-mono text-amber-300">{cluster.name}</code> ({cluster.endpoint}). The program is deployed on <strong className="text-emerald-400">Devnet</strong>.
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => {
+              const devnet = clusters.find((c) => c.name === 'devnet')
+              if (devnet) setCluster(devnet)
+            }}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-semibold shrink-0"
+          >
+            Switch to Devnet
+          </Button>
+        </div>
+      )}
+
       {/* Hero Header */}
       <div className="text-center space-y-3 bg-gradient-to-r from-purple-900/30 via-indigo-900/30 to-blue-900/30 p-8 rounded-2xl border border-indigo-500/20 backdrop-blur-md">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
@@ -47,8 +71,10 @@ export function EventAttendanceNftUi() {
         <p className="max-w-2xl mx-auto text-neutral-400 text-sm sm:text-base">
           Atomically verify event check-ins on Solana. Mints non-transferable (frozen) soulbound badge NFTs with permanent proof of attendance.
         </p>
-        <div className="text-xs text-neutral-500 font-mono pt-2">
-          Program ID: <span className="text-indigo-400">{programId.toBase58()}</span>
+        <div className="flex items-center justify-center gap-4 text-xs font-mono pt-2 text-neutral-500">
+          <div>Program ID: <span className="text-indigo-400">{programId.toBase58()}</span></div>
+          <div>•</div>
+          <div>Active Cluster: <span className={cluster.name === 'devnet' ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>{cluster.name}</span></div>
         </div>
       </div>
 
