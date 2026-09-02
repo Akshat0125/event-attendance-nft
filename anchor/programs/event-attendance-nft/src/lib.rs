@@ -215,6 +215,7 @@ pub enum EventError {
     Overflow,
 }
 
+#[cfg(target_os = "solana")]
 #[no_mangle]
 unsafe extern "Rust" fn __getrandom_v03_custom(
     dest: *mut u8,
