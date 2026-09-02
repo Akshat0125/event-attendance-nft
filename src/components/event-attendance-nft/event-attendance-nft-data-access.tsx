@@ -60,8 +60,12 @@ export function useEventAttendanceNftProgram() {
         } as any)
         .transaction()
 
+      transaction.feePayer = organizer
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+      transaction.recentBlockhash = blockhash
+
       const signature = await wallet.sendTransaction(transaction, connection)
-      await connection.confirmTransaction(signature, 'confirmed')
+      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
 
       return { signature, eventPda, alreadyExists: false }
     },
@@ -146,10 +150,14 @@ export function useEventAttendanceNftProgram() {
         } as any)
         .transaction()
 
+      transaction.feePayer = attendee
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+      transaction.recentBlockhash = blockhash
+
       const signature = await wallet.sendTransaction(transaction, connection, {
         signers: [mintKeypair],
       })
-      await connection.confirmTransaction(signature, 'confirmed')
+      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
 
       return { signature, mint: mintKeypair.publicKey, attendancePda }
     },
