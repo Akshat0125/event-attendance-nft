@@ -3,7 +3,7 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #FAFAFA;
+  --background: #F6F5F3;
   --foreground: #111827;
   --card: #FFFFFF;
   --card-foreground: #111827;
@@ -11,19 +11,19 @@
   --popover-foreground: #111827;
   --primary: #111827;
   --primary-foreground: #FFFFFF;
-  --secondary: #F3F4F6;
+  --secondary: #EFECE6;
   --secondary-foreground: #111827;
-  --muted: #F3F4F6;
+  --muted: #EFECE6;
   --muted-foreground: #6B7280;
   --accent: #9945FF;
   --accent-foreground: #FFFFFF;
-  --border: #E5E7EB;
-  --input: #E5E7EB;
+  --border: #E5E3DF;
+  --input: #E5E3DF;
   --ring: #111827;
 }
 
 body {
-  background-color: #FAFAFA;
+  background-color: #F6F5F3;
   color: #111827;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   min-height: 100vh;
@@ -32,6 +32,14 @@ body {
 button:not(:disabled),
 [role='button']:not(:disabled) {
   cursor: pointer;
+}
+
+/* SaaS Card Base Styling with Soft Lifted Shadow */
+.card-saas {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E3DF;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  border-radius: 0.875rem;
 }
 
 /* Primary SaaS Dark Button */

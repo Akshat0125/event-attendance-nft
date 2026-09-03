@@ -9,7 +9,7 @@ import { ExplorerLink } from '@/components/cluster/cluster-ui'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { fetchEventMetadata, truncateWallet, EventMetadata } from '@/lib/event-metadata'
-import { Loader2, CheckCircle2, UserCheck, ArrowLeft, ShieldCheck } from 'lucide-react'
+import { Loader2, CheckCircle2, UserCheck, ArrowLeft } from 'lucide-react'
 
 export default function PublicCheckInPage({ params }: { params: Promise<{ eventId: string }> }) {
   const resolvedParams = use(params)
@@ -121,19 +121,19 @@ export default function PublicCheckInPage({ params }: { params: Promise<{ eventI
   return (
     <div className="py-8 sm:py-12 max-w-2xl mx-auto px-4 space-y-8">
       {isLoadingEvent ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-12 text-center text-[#6B7280] flex flex-col items-center justify-center space-y-3 shadow-sm">
+        <div className="card-saas p-12 text-center text-[#6B7280] flex flex-col items-center justify-center space-y-3">
           <Loader2 className="w-6 h-6 animate-spin text-[#111827]" />
           <p className="text-xs">Loading event credentials...</p>
         </div>
       ) : !eventAccount ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-10 text-center space-y-2 shadow-sm">
+        <div className="card-saas p-10 text-center space-y-2">
           <p className="text-lg font-bold text-[#111827]">Event Not Found</p>
           <p className="text-xs text-[#6B7280]">No event exists at this address on Solana Devnet.</p>
         </div>
       ) : (
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 sm:p-10 space-y-8 shadow-sm">
+        <div className="card-saas p-6 sm:p-10 space-y-8">
           {/* Badge Visual & Hero Header */}
-          <div className="text-center space-y-4 border-b border-[#E5E7EB] pb-6">
+          <div className="text-center space-y-4 border-b border-[#E5E3DF] pb-6">
             <div className="w-32 h-32 mx-auto rounded-2xl bg-gradient-to-br from-[#9945FF] to-[#14F195] p-1 shadow-md">
               <div className="w-full h-full rounded-[14px] bg-white overflow-hidden flex items-center justify-center p-1.5">
                 {metadata?.badgeImage ? (
@@ -146,7 +146,7 @@ export default function PublicCheckInPage({ params }: { params: Promise<{ eventI
             </div>
 
             <div className="space-y-2">
-              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold uppercase inline-block">
+              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase inline-block">
                 Verifiable Event Credentials
               </span>
               <h1 className="text-2xl sm:text-4xl font-extrabold text-[#111827] tracking-tight break-words">

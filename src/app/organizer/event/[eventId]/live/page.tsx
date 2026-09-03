@@ -127,9 +127,9 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
   const capacityPercent = hasCapacity ? Math.min(100, Math.round((attendeeCount / capacity!) * 100)) : null
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#111827] p-4 sm:p-8 flex flex-col justify-between space-y-6">
+    <div className="min-h-screen bg-[#F6F5F3] text-[#111827] p-4 sm:p-8 flex flex-col justify-between space-y-6">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
+      <div className="flex items-center justify-between border-b border-[#E5E3DF] pb-4">
         <Link
           href={`/organizer/event/${eventPdaStr}`}
           className="inline-flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] font-medium transition"
@@ -139,7 +139,7 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
         </Link>
 
         <div className="flex items-center gap-3">
-          <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold uppercase inline-flex items-center gap-2">
+          <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase inline-flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             LIVE
           </span>
@@ -148,7 +148,7 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
               loadEventInfo()
               loadAttendanceRecords()
             }}
-            className="p-2 bg-white border border-[#E5E7EB] hover:bg-slate-50 rounded-lg text-xs text-[#6B7280] transition"
+            className="p-2 bg-white border border-[#E5E3DF] hover:bg-[#EFECE6] rounded-lg text-xs text-[#6B7280] transition"
             title="Refresh"
           >
             <RefreshCw className="w-4 h-4 shrink-0" />
@@ -176,7 +176,7 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
               <div className="text-left space-y-0.5">
                 <span className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block">Checked In</span>
                 {capacityPercent !== null && (
-                  <span className="text-xs font-semibold text-emerald-600">{capacityPercent}% of capacity ({capacity})</span>
+                  <span className="text-xs font-semibold text-emerald-700">{capacityPercent}% of capacity ({capacity})</span>
                 )}
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
 
           {/* Centered Large QR Code */}
           <div className="flex flex-col items-center justify-center">
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E5E7EB] shadow-lg inline-flex items-center justify-center">
+            <div className="card-saas p-6 sm:p-8 inline-flex items-center justify-center">
               <QRCodeSVG
                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${eventPdaStr}`}
                 size={260}
@@ -198,8 +198,8 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
           </div>
 
           {/* Recent Check-Ins List */}
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm max-w-2xl mx-auto space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+          <div className="card-saas p-6 max-w-2xl mx-auto space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E5E3DF] pb-3">
               <h3 className="font-bold text-[#111827] text-sm">Recent Check-Ins</h3>
               <span className="text-xs text-[#6B7280] font-mono">{recentCheckIns.length} recorded</span>
             </div>
@@ -219,7 +219,7 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
                 {recentCheckIns.map((rec, idx) => (
                   <div
                     key={rec.attendee + idx}
-                    className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-3 text-xs"
+                    className="bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg p-2.5 flex items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -240,7 +240,7 @@ export default function LiveCheckInScreen({ params }: { params: Promise<{ eventI
       )}
 
       {/* Footer info */}
-      <div className="text-center text-[11px] text-[#6B7280] pt-4 border-t border-[#E5E7EB]">
+      <div className="text-center text-[11px] text-[#6B7280] pt-4 border-t border-[#E5E3DF]">
         NFTicket Live Screen • Powered by Solana Devnet
       </div>
     </div>

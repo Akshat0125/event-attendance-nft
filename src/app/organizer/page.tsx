@@ -262,7 +262,7 @@ function OrganizerContent() {
   return (
     <div className="py-6 sm:py-8 max-w-6xl mx-auto px-4 space-y-8">
       {/* Dashboard Greeting Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E7EB] pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E3DF] pb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111827]">{greeting}</h1>
           <p className="text-xs sm:text-sm text-[#6B7280] mt-1">
@@ -285,7 +285,7 @@ function OrganizerContent() {
       </div>
 
       {!wallet.publicKey ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-8 sm:p-12 text-center space-y-4 shadow-sm">
+        <div className="card-saas p-8 sm:p-12 text-center space-y-4">
           <h2 className="text-xl font-bold text-[#111827]">Connect Organizer Wallet</h2>
           <p className="text-[#6B7280] max-w-md mx-auto text-xs sm:text-sm leading-relaxed">
             Please connect your wallet to view your event dashboard and issue credentials on Solana Devnet.
@@ -298,19 +298,19 @@ function OrganizerContent() {
         <>
           {/* Stat Cards (Real On-Chain Data Only) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm space-y-1">
+            <div className="card-saas p-5 space-y-1">
               <span className="text-3xl font-extrabold text-[#111827]">{totalEventsCount}</span>
               <span className="text-xs text-[#6B7280] font-medium block">Events</span>
             </div>
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm space-y-1">
+            <div className="card-saas p-5 space-y-1">
               <span className="text-3xl font-extrabold text-[#111827]">{totalRegisteredCount}</span>
               <span className="text-xs text-[#6B7280] font-medium block">Registered</span>
             </div>
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm space-y-1">
+            <div className="card-saas p-5 space-y-1">
               <span className="text-3xl font-extrabold text-emerald-600">{totalCheckedInCount}</span>
               <span className="text-xs text-[#6B7280] font-medium block">Checked In</span>
             </div>
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm space-y-1">
+            <div className="card-saas p-5 space-y-1">
               <span className="text-3xl font-extrabold text-[#9945FF]">{badgesIssuedCount}</span>
               <span className="text-xs text-[#6B7280] font-medium block">Badges Issued</span>
             </div>
@@ -318,8 +318,8 @@ function OrganizerContent() {
 
           {/* Multi-Step Create Event Flow */}
           {showWizard && (
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 sm:p-8 space-y-6 shadow-sm animate-in fade-in duration-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#E5E7EB] pb-4 gap-3">
+            <div className="card-saas p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#E5E3DF] pb-4 gap-3">
                 <div>
                   <h2 className="text-lg font-bold text-[#111827]">Create New Event</h2>
                   <p className="text-xs text-[#6B7280]">
@@ -340,8 +340,8 @@ function OrganizerContent() {
                         currentStep === stepNum
                           ? 'bg-[#111827] text-white'
                           : currentStep > stepNum
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-slate-100 text-slate-400 border border-slate-200'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-[#F6F5F3] text-slate-400 border border-[#E5E3DF]'
                       }`}
                     >
                       {currentStep > stepNum ? '✓' : stepNum}
@@ -364,7 +364,7 @@ function OrganizerContent() {
                       placeholder="e.g. Solana Builder Summit 2026"
                       value={eventName}
                       onChange={(e) => setEventName(e.target.value)}
-                      className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
+                      className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
                       required
                     />
                   </div>
@@ -376,7 +376,7 @@ function OrganizerContent() {
                       placeholder="Provide event details or instructions..."
                       value={eventDescription}
                       onChange={(e) => setEventDescription(e.target.value)}
-                      className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none resize-none transition"
+                      className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none resize-none transition"
                     />
                   </div>
 
@@ -388,7 +388,7 @@ function OrganizerContent() {
                         placeholder="e.g. San Francisco, CA or Online"
                         value={eventLocation}
                         onChange={(e) => setEventLocation(e.target.value)}
-                        className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
+                        className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
                       />
                     </div>
 
@@ -397,7 +397,7 @@ function OrganizerContent() {
                       <select
                         value={eventType}
                         onChange={(e) => setEventType(e.target.value)}
-                        className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
+                        className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
                       >
                         <option value="Conference">Conference</option>
                         <option value="Meetup">Meetup</option>
@@ -408,7 +408,7 @@ function OrganizerContent() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-4 border-t border-[#E5E7EB]">
+                  <div className="flex justify-end pt-4 border-t border-[#E5E3DF]">
                     <button
                       type="button"
                       disabled={!eventName.trim()}
@@ -432,7 +432,7 @@ function OrganizerContent() {
                         type="date"
                         value={eventDate}
                         onChange={(e) => setEventDate(e.target.value)}
-                        className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
+                        className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
                       />
                     </div>
 
@@ -442,7 +442,7 @@ function OrganizerContent() {
                         type="time"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
-                        className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
+                        className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
                       />
                     </div>
 
@@ -452,7 +452,7 @@ function OrganizerContent() {
                         type="time"
                         value={endTime}
                         onChange={(e) => setEndTime(e.target.value)}
-                        className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
+                        className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
                       />
                     </div>
                   </div>
@@ -468,15 +468,15 @@ function OrganizerContent() {
                       placeholder="e.g. 100 (leave empty for unlimited)"
                       value={capacity}
                       onChange={(e) => setCapacity(e.target.value)}
-                      className="w-full bg-white border border-[#E5E7EB] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
+                      className="w-full bg-[#FFFFFF] border border-[#E5E3DF] focus:border-[#111827] rounded-lg px-3.5 py-2 text-[#111827] text-sm outline-none transition"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E3DF]">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="bg-slate-100 hover:bg-slate-200 text-[#111827] py-2.5 px-4 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-200"
+                      className="bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] py-2.5 px-4 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-[#E5E3DF]"
                     >
                       <ArrowLeft className="w-4 h-4 shrink-0" />
                       <span>Back</span>
@@ -505,7 +505,7 @@ function OrganizerContent() {
                         className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between h-24 ${
                           selectedBadgeOption === 'violet'
                             ? 'border-[#9945FF] bg-purple-50/50 ring-1 ring-[#9945FF]'
-                            : 'border-[#E5E7EB] bg-white hover:border-slate-300'
+                            : 'border-[#E5E3DF] bg-white hover:border-slate-300'
                         }`}
                       >
                         <div className="w-full h-8 rounded bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[10px]">
@@ -520,7 +520,7 @@ function OrganizerContent() {
                         className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between h-24 ${
                           selectedBadgeOption === 'teal'
                             ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500'
-                            : 'border-[#E5E7EB] bg-white hover:border-slate-300'
+                            : 'border-[#E5E3DF] bg-white hover:border-slate-300'
                         }`}
                       >
                         <div className="w-full h-8 rounded bg-gradient-to-r from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-[10px]">
@@ -534,8 +534,8 @@ function OrganizerContent() {
                         onClick={() => setSelectedBadgeOption('custom')}
                         className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between h-24 ${
                           selectedBadgeOption === 'custom'
-                            ? 'border-[#111827] bg-slate-50 ring-1 ring-[#111827]'
-                            : 'border-[#E5E7EB] bg-white hover:border-slate-300'
+                            ? 'border-[#111827] bg-[#F6F5F3] ring-1 ring-[#111827]'
+                            : 'border-[#E5E3DF] bg-white hover:border-slate-300'
                         }`}
                       >
                         <div className="w-full h-8 rounded border border-dashed border-slate-300 flex items-center justify-center text-slate-500">
@@ -547,7 +547,7 @@ function OrganizerContent() {
                   </div>
 
                   {selectedBadgeOption === 'custom' && (
-                    <div className="p-4 bg-slate-50 border border-[#E5E7EB] rounded-lg space-y-2">
+                    <div className="p-4 bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg space-y-2">
                       <label className="text-xs font-semibold text-[#6B7280] block">Upload Custom Badge File</label>
                       <input
                         type="file"
@@ -558,11 +558,11 @@ function OrganizerContent() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E3DF]">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="bg-slate-100 hover:bg-slate-200 text-[#111827] py-2.5 px-4 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-200"
+                      className="bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] py-2.5 px-4 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-[#E5E3DF]"
                     >
                       <ArrowLeft className="w-4 h-4 shrink-0" />
                       <span>Back</span>
@@ -582,8 +582,8 @@ function OrganizerContent() {
               {/* Step 4: Review */}
               {currentStep === 4 && (
                 <div className="space-y-5">
-                  <div className="bg-slate-50 border border-[#E5E7EB] rounded-lg p-4 space-y-3 text-xs">
-                    <h3 className="font-bold text-[#111827] border-b border-[#E5E7EB] pb-2 text-sm">Event Summary</h3>
+                  <div className="bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg p-4 space-y-3 text-xs">
+                    <h3 className="font-bold text-[#111827] border-b border-[#E5E3DF] pb-2 text-sm">Event Summary</h3>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <span className="text-[#6B7280] block">Event Name</span>
@@ -606,7 +606,7 @@ function OrganizerContent() {
 
                   {/* Inline Transaction Progress Alerts */}
                   {txProgressState !== 'idle' && (
-                    <div className="bg-slate-50 border border-[#E5E7EB] rounded-lg p-4 space-y-2">
+                    <div className="bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg p-4 space-y-2">
                       <div className="flex items-center gap-2.5">
                         {txProgressState === 'error' ? (
                           <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
@@ -627,7 +627,7 @@ function OrganizerContent() {
                       </div>
 
                       {txProgressState === 'error' && rawTxError && (
-                        <div className="pt-2 border-t border-[#E5E7EB] space-y-1">
+                        <div className="pt-2 border-t border-[#E5E3DF] space-y-1">
                           <button
                             type="button"
                             onClick={() => setShowTechnicalError(!showTechnicalError)}
@@ -646,12 +646,12 @@ function OrganizerContent() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E3DF]">
                     <button
                       type="button"
                       disabled={txProgressState !== 'idle' && txProgressState !== 'error'}
                       onClick={() => setCurrentStep(3)}
-                      className="bg-slate-100 hover:bg-slate-200 text-[#111827] py-2.5 px-4 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-slate-200 disabled:opacity-50"
+                      className="bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] py-2.5 px-4 rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 border border-[#E5E3DF] disabled:opacity-50"
                     >
                       <ArrowLeft className="w-4 h-4 shrink-0" />
                       <span>Back</span>
@@ -690,8 +690,8 @@ function OrganizerContent() {
 
           {/* Product View Tabs (Dashboard, Events, Attendees, Badges, Analytics, Settings) */}
           {(activeTab === 'dashboard' || activeTab === 'events') && (
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
+            <div className="card-saas p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-[#E5E3DF] pb-4">
                 <div>
                   <h2 className="text-lg font-bold text-[#111827]">Your Events</h2>
                   <p className="text-xs text-[#6B7280]">On-chain event records associated with your connected wallet</p>
@@ -708,7 +708,7 @@ function OrganizerContent() {
                 </div>
               ) : organizerEvents.length === 0 ? (
                 /* Simple Empty State: Text + 1 CTA */
-                <div className="py-12 text-center text-[#6B7280] space-y-3 border border-dashed border-[#E5E7EB] rounded-xl p-6">
+                <div className="py-12 text-center text-[#6B7280] space-y-3 border border-dashed border-[#E5E3DF] rounded-xl p-6">
                   <p className="text-sm font-semibold text-[#111827]">No events created yet</p>
                   <p className="text-xs max-w-sm mx-auto">Create your first event to issue verifiable attendance credentials.</p>
                   <button
@@ -727,7 +727,7 @@ function OrganizerContent() {
                     return (
                       <div
                         key={evt.publicKey}
-                        className="bg-white border border-[#E5E7EB] hover:border-slate-400 rounded-xl p-5 flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md transition-shadow"
+                        className="card-saas p-5 flex flex-col justify-between space-y-4 hover:border-slate-400 transition-all"
                       >
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-3">
@@ -757,10 +757,10 @@ function OrganizerContent() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 pt-3 border-t border-[#E5E7EB]">
+                        <div className="flex items-center gap-2 pt-3 border-t border-[#E5E3DF]">
                           <Link
                             href={`/organizer/event/${evt.publicKey}`}
-                            className="flex-1 bg-slate-100 hover:bg-slate-200 text-[#111827] py-2 px-3 rounded-lg text-xs font-semibold text-center transition border border-slate-200"
+                            className="flex-1 bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] py-2 px-3 rounded-lg text-xs font-semibold text-center transition border border-[#E5E3DF]"
                           >
                             View Details
                           </Link>
@@ -783,7 +783,7 @@ function OrganizerContent() {
 
           {/* Attendees Tab View */}
           {activeTab === 'attendees' && (
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-4 shadow-sm">
+            <div className="card-saas p-6 space-y-4">
               <h2 className="text-lg font-bold text-[#111827]">Attendees Overview</h2>
               <p className="text-xs text-[#6B7280]">
                 A total of <strong className="text-[#111827]">{totalCheckedInCount}</strong> attendees have checked in across your {totalEventsCount} on-chain events.
@@ -793,7 +793,7 @@ function OrganizerContent() {
 
           {/* Badges Tab View */}
           {activeTab === 'badges' && (
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-4 shadow-sm">
+            <div className="card-saas p-6 space-y-4">
               <h2 className="text-lg font-bold text-[#111827]">Issued Soulbound Badges</h2>
               <p className="text-xs text-[#6B7280]">
                 A total of <strong className="text-[#9945FF] font-bold">{badgesIssuedCount}</strong> Soulbound NFT badges have been minted on Solana Devnet.
@@ -803,7 +803,7 @@ function OrganizerContent() {
 
           {/* Analytics Tab View */}
           {activeTab === 'analytics' && (
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-4 shadow-sm text-center">
+            <div className="card-saas p-6 space-y-4 text-center">
               <h2 className="text-lg font-bold text-[#111827]">Attendance Analytics</h2>
               <p className="text-xs text-[#6B7280]">
                 Analytics metrics are calculated live from Solana Devnet on-chain event accounts.
@@ -813,7 +813,7 @@ function OrganizerContent() {
 
           {/* Settings Tab View */}
           {activeTab === 'settings' && (
-            <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-4 shadow-sm max-w-md">
+            <div className="card-saas p-6 space-y-4 max-w-md">
               <h2 className="text-lg font-bold text-[#111827]">Organizer Settings</h2>
               <div className="space-y-2 text-xs text-[#6B7280]">
                 <div>Connected Organizer Wallet: <span className="font-mono text-[#111827] font-semibold">{truncateWallet(wallet.publicKey?.toBase58())}</span></div>
@@ -827,7 +827,7 @@ function OrganizerContent() {
       {/* Quick QR Modal */}
       {activeQrEvent && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 min-h-screen overflow-y-auto">
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 max-w-sm w-full text-center space-y-5 relative shadow-xl animate-in fade-in zoom-in duration-150 my-auto">
+          <div className="card-saas p-6 max-w-sm w-full text-center space-y-5 relative shadow-xl animate-in fade-in zoom-in duration-150 my-auto">
             <button
               onClick={() => setActiveQrEvent(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
@@ -840,7 +840,7 @@ function OrganizerContent() {
               <h3 className="text-lg font-bold text-[#111827] break-words">{activeQrEvent.name}</h3>
             </div>
 
-            <div className="bg-white p-3 border border-[#E5E7EB] rounded-xl inline-flex items-center justify-center mx-auto shadow-xs">
+            <div className="bg-white p-3 border border-[#E5E3DF] rounded-xl inline-flex items-center justify-center mx-auto shadow-xs">
               <QRCodeSVG
                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${activeQrEvent.pda}`}
                 size={180}
@@ -861,7 +861,7 @@ function OrganizerContent() {
                   navigator.clipboard.writeText(`${window.location.origin}/check-in/${activeQrEvent.pda}`)
                   toast.success('Check-In link copied!')
                 }}
-                className="p-2.5 bg-slate-100 hover:bg-slate-200 text-[#111827] rounded-lg text-xs font-semibold border border-slate-200"
+                className="p-2.5 bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] rounded-lg text-xs font-semibold border border-[#E5E3DF]"
               >
                 <Copy className="w-4 h-4" />
               </button>

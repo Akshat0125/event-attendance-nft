@@ -89,7 +89,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
   return (
     <div className="py-6 sm:py-8 max-w-5xl mx-auto px-4 space-y-8">
       {/* Navigation & Header */}
-      <div className="space-y-4 border-b border-[#E5E7EB] pb-6">
+      <div className="space-y-4 border-b border-[#E5E3DF] pb-6">
         <Link
           href="/organizer"
           className="inline-flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] transition"
@@ -137,7 +137,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                   navigator.clipboard.writeText(`${window.location.origin}/check-in/${eventPdaStr}`)
                   toast.success('Attendee check-in link copied!')
                 }}
-                className="bg-slate-100 hover:bg-slate-200 text-[#111827] px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 border border-slate-200"
+                className="bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 border border-[#E5E3DF]"
               >
                 <Copy className="w-3.5 h-3.5 shrink-0" />
                 <span>Share Link</span>
@@ -145,7 +145,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
 
               <button
                 onClick={() => setShowQrModal(true)}
-                className="bg-slate-100 hover:bg-slate-200 text-[#111827] px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 border border-slate-200"
+                className="bg-[#EFECE6] hover:bg-[#E5E5DF] text-[#111827] px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 border border-[#E5E3DF]"
               >
                 <QrCode className="w-3.5 h-3.5 shrink-0" />
                 <span>QR Code</span>
@@ -166,27 +166,27 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
       {eventAccount && (
         <div className="space-y-8">
           {/* Stat Row & Capacity Progress Bar */}
-          <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-6 shadow-sm">
+          <div className="card-saas p-6 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-1">
+              <div className="bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg p-4 space-y-1">
                 <span className="text-xs text-[#6B7280] font-medium block">Checked In Attendees</span>
                 <span className="text-3xl font-extrabold text-emerald-600">{attendeeCount}</span>
               </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-1">
+              <div className="bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg p-4 space-y-1">
                 <span className="text-xs text-[#6B7280] font-medium block">Badges Issued</span>
                 <span className="text-3xl font-extrabold text-[#9945FF]">{attendeeCount}</span>
               </div>
             </div>
 
             {hasCapacity && (
-              <div className="space-y-2 pt-2 border-t border-[#E5E7EB]">
+              <div className="space-y-2 pt-2 border-t border-[#E5E3DF]">
                 <div className="flex items-center justify-between text-xs text-[#6B7280]">
                   <span>Capacity Fill Progress</span>
                   <span className="font-bold text-[#111827]">
                     {attendeeCount} / {capacity} ({progressPercent}%)
                   </span>
                 </div>
-                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                <div className="w-full h-2.5 bg-[#F6F5F3] rounded-full overflow-hidden border border-[#E5E3DF]">
                   <div
                     className="h-full bg-gradient-to-r from-[#9945FF] to-emerald-500 transition-all duration-300 rounded-full"
                     style={{ width: `${progressPercent}%` }}
@@ -198,8 +198,8 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
 
           {/* Event Details & High-Signal Badge Credential Visual */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-7 bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-5 shadow-sm">
-              <h2 className="text-base font-bold text-[#111827] border-b border-[#E5E7EB] pb-3">Event Details</h2>
+            <div className="lg:col-span-7 card-saas p-6 space-y-5">
+              <h2 className="text-base font-bold text-[#111827] border-b border-[#E5E3DF] pb-3">Event Details</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
@@ -223,14 +223,14 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
               </div>
 
               {metadata?.description && (
-                <div className="pt-3 border-t border-[#E5E7EB]">
+                <div className="pt-3 border-t border-[#E5E3DF]">
                   <span className="text-xs text-[#6B7280] block mb-1">Description</span>
                   <p className="text-xs text-[#111827] leading-relaxed">{metadata.description}</p>
                 </div>
               )}
             </div>
 
-            {/* High-Signal Premium Credential Visual (The ONE strong gradient place) */}
+            {/* High-Signal Premium Credential Visual */}
             <div className="lg:col-span-5">
               <div className="bg-gradient-to-br from-[#9945FF] via-purple-600 to-[#14F195] rounded-2xl p-1 shadow-lg">
                 <div className="bg-white rounded-[14px] p-6 space-y-5 flex flex-col justify-between h-full">
@@ -263,7 +263,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 rounded-lg p-3 text-[11px] text-[#6B7280] space-y-1 font-mono border border-slate-100">
+                  <div className="bg-[#F6F5F3] rounded-lg p-3 text-[11px] text-[#6B7280] space-y-1 font-mono border border-[#E5E3DF]">
                     <div className="flex justify-between">
                       <span>Type:</span>
                       <span className="font-bold text-[#111827]">Soulbound Badge</span>
@@ -285,7 +285,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
       {/* QR Code Modal */}
       {showQrModal && eventAccount && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 min-h-screen overflow-y-auto">
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 max-w-sm w-full text-center space-y-5 relative shadow-xl animate-in fade-in zoom-in duration-150 my-auto">
+          <div className="card-saas p-6 max-w-sm w-full text-center space-y-5 relative shadow-xl animate-in fade-in zoom-in duration-150 my-auto">
             <button
               onClick={() => setShowQrModal(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
@@ -298,7 +298,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
               <h3 className="text-lg font-bold text-[#111827]">{metadata?.name || eventAccount.name}</h3>
             </div>
 
-            <div className="bg-white p-3 border border-[#E5E7EB] rounded-xl inline-flex items-center justify-center mx-auto shadow-xs">
+            <div className="bg-white p-3 border border-[#E5E3DF] rounded-xl inline-flex items-center justify-center mx-auto shadow-xs">
               <QRCodeSVG
                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${eventPdaStr}`}
                 size={180}
@@ -312,7 +312,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                 navigator.clipboard.writeText(`${window.location.origin}/check-in/${eventPdaStr}`)
                 toast.success('Check-In link copied!')
               }}
-              className="w-full bg-slate-100 hover:bg-slate-200 text-[#111827] py-2.5 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-2 border border-slate-200"
+              className="w-full bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] py-2.5 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-2 border border-[#E5E3DF]"
             >
               <Copy className="w-4 h-4 shrink-0" />
               <span>Copy Link</span>
