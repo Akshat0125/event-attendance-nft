@@ -1,10 +1,10 @@
 'use client'
+
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
-import { ThemeSelect } from '@/components/theme-select'
 import { ClusterUiSelect } from './cluster/cluster-ui'
 import { WalletButton } from '@/components/solana/solana-provider'
 
@@ -18,18 +18,17 @@ export function AppHeader({ links = [] }: { links: { label: string; path: string
 
   return (
     <header className="relative z-50 border-b border-[#1F2D44] bg-[#0B1220]/90 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-3 text-[#E8EDF6]">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         <div className="flex items-center gap-6">
-          <Link className="text-xl font-extrabold tracking-tight flex items-center gap-2 hover:opacity-90 transition" href="/">
-            <span className="text-2xl">🎟️</span>
-            <span className="text-solana-gradient">NFTicket</span>
+          <Link className="text-xl font-extrabold tracking-tight inline-flex items-center gap-2 hover:opacity-90 transition text-solana-gradient shrink-0" href="/">
+            NFTicket
           </Link>
           <div className="hidden md:flex items-center">
-            <ul className="flex gap-5 flex-nowrap items-center text-sm font-medium">
+            <ul className="flex items-center gap-5 flex-nowrap text-sm font-medium">
               {links.map(({ label, path }) => (
-                <li key={path}>
+                <li key={path} className="inline-flex items-center">
                   <Link
-                    className={`transition ${isActive(path) ? 'text-[#14F195] font-bold border-b-2 border-[#14F195] pb-1' : 'text-[#8FA3C8] hover:text-[#E8EDF6]'}`}
+                    className={`transition inline-flex items-center py-1 ${isActive(path) ? 'text-[#14F195] font-bold border-b-2 border-[#14F195]' : 'text-[#8FA3C8] hover:text-[#E8EDF6]'}`}
                     href={path}
                   >
                     {label}
@@ -40,7 +39,7 @@ export function AppHeader({ links = [] }: { links: { label: string; path: string
           </div>
         </div>
 
-        <Button variant="ghost" size="icon" className="md:hidden text-[#8FA3C8] hover:text-white" onClick={() => setShowMenu(!showMenu)}>
+        <Button variant="ghost" size="icon" className="md:hidden text-[#8FA3C8] hover:text-white inline-flex items-center justify-center" onClick={() => setShowMenu(!showMenu)}>
           {showMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
 
@@ -66,7 +65,7 @@ export function AppHeader({ links = [] }: { links: { label: string; path: string
                 ))}
               </ul>
               <div className="flex flex-col gap-4 items-stretch w-full overflow-hidden">
-                <div className="w-full overflow-hidden flex justify-center">
+                <div className="w-full overflow-hidden flex items-center justify-center">
                   <WalletButton />
                 </div>
                 <div className="flex items-center justify-between gap-2 text-xs text-[#8FA3C8]">
