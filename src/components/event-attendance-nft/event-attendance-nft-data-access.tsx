@@ -4,7 +4,7 @@ import { getEventAttendanceNftProgram, EVENT_ATTENDANCE_NFT_PROGRAM_ID } from '@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useCluster } from '../cluster/cluster-data-access'
 import { useAnchorProvider } from '../solana/solana-provider'
@@ -33,7 +33,7 @@ export function useEventAttendanceNftProgram() {
 
   const createEvent = useMutation({
     mutationKey: ['event-attendance-nft', 'create-event', { cluster }],
-    mutationFn: async ({ name, organizer }: { name: string; organizer: PublicKey }) => {
+    mutationFn: async ({ name, badgeUri, organizer }: { name: string; badgeUri: string; organizer: PublicKey }) => {
       if (!program || !wallet.sendTransaction) {
         toast.error('Wallet not connected! Please connect Phantom wallet first.')
         throw new Error('Wallet not connected')
@@ -52,7 +52,7 @@ export function useEventAttendanceNftProgram() {
       }
 
       const transaction = await program.methods
-        .createEvent(name)
+        .createEvent(name, badgeUri)
         .accounts({
           organizer,
           event: eventPda,
@@ -63,20 +63,6 @@ export function useEventAttendanceNftProgram() {
       transaction.feePayer = organizer
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
-
-      console.log('=== DIAGNOSTIC (createEvent) STEP 1: TRANSACTION ===', {
-        feePayer: transaction.feePayer?.toBase58(),
-        recentBlockhash: transaction.recentBlockhash,
-      })
-      try {
-        const simResult = await connection.simulateTransaction(transaction)
-        console.log('=== DIAGNOSTIC (createEvent) STEP 2: SIMULATION ===', {
-          err: simResult.value.err,
-          logs: simResult.value.logs,
-        })
-      } catch (simErr) {
-        console.error('=== DIAGNOSTIC (createEvent) SIMULATION ERROR ===', simErr)
-      }
 
       const signature = await wallet.sendTransaction(transaction, connection)
       await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
@@ -95,7 +81,7 @@ export function useEventAttendanceNftProgram() {
       if (msg.includes('already in use') || err?.logs?.some((l: string) => l.includes('already in use'))) {
         toast.info('Event already exists on-chain! Proceed directly to Check-In.')
       } else if (msg.includes('Blockhash not found') || msg.includes('Simulation failed')) {
-        toast.error('Simulation failed: Please ensure top-right cluster is set to "devnet" and your wallet has Devnet SOL!')
+        toast.error('Simulation failed: Please ensure cluster is set to "devnet" and your wallet has SOL!')
       } else if (msg.includes('User rejected')) {
         toast.error('Transaction cancelled/rejected in Phantom wallet.')
       } else {
@@ -106,7 +92,7 @@ export function useEventAttendanceNftProgram() {
 
   const checkIn = useMutation({
     mutationKey: ['event-attendance-nft', 'check-in', { cluster }],
-    mutationFn: async ({ eventName, organizer }: { eventName: string; organizer: PublicKey }) => {
+    mutationFn: async ({ eventPda }: { eventPda: PublicKey }) => {
       if (!program || !wallet.publicKey || !wallet.sendTransaction) {
         toast.error('Wallet not connected! Please connect Phantom wallet first.')
         throw new Error('Wallet not connected')
@@ -115,15 +101,10 @@ export function useEventAttendanceNftProgram() {
       const attendee = wallet.publicKey
       const mintKeypair = Keypair.generate()
 
-      const [eventPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('event'), organizer.toBuffer(), Buffer.from(eventName)],
-        programId
-      )
-
       // Pre-check if event account exists
       const eventAccountInfo = await connection.getAccountInfo(eventPda)
       if (!eventAccountInfo) {
-        throw new Error(`Event "${eventName}" does not exist on-chain for organizer ${organizer.toBase58().slice(0, 8)}... Create the event first!`)
+        throw new Error(`Event PDA ${eventPda.toBase58().slice(0, 8)}... does not exist on-chain! Create the event first!`)
       }
 
       const [attendancePda] = PublicKey.findProgramAddressSync(
@@ -168,97 +149,11 @@ export function useEventAttendanceNftProgram() {
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
 
-      // === DIAGNOSTIC STEP 1: Log accounts array in exact order ===
-      const accountNames = [
-        'attendee',
-        'event',
-        'attendanceRecord',
-        'mintAuthority',
-        'mint',
-        'tokenAccount',
-        'metadata',
-        'tokenProgram',
-        'associatedTokenProgram',
-        'metadataProgram',
-        'systemProgram',
-        'rent',
-      ]
-      console.log('=== DIAGNOSTIC STEP 1: INSTRUCTION ACCOUNTS (IN ORDER) ===')
-      transaction.instructions[0]?.keys.forEach((k, idx) => {
-        console.log(`[Account #${idx} ${accountNames[idx] || 'unknown'}]:`, {
-          pubkey: k.pubkey.toBase58(),
-          isSigner: k.isSigner,
-          isWritable: k.isWritable,
-        })
+      const signature = await wallet.sendTransaction(transaction, connection, {
+        signers: [mintKeypair],
       })
-
-      // === DIAGNOSTIC STEP 2: Simulate transaction on-chain ===
-      // To get real program execution logs from simulateTransaction without failing signature checks,
-      // we build a simulation-specific copy signed by mintKeypair.
-      console.log('=== DIAGNOSTIC STEP 2: RUNNING RPC SIMULATION ===')
-      try {
-        // Clone transaction for simulation
-        const simTx = await program.methods
-          .checkIn()
-          .accounts({
-            attendee,
-            event: eventPda,
-            attendanceRecord: attendancePda,
-            mintAuthority: mintAuthPda,
-            mint: mintKeypair.publicKey,
-            tokenAccount,
-            metadata: metadataPda,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            metadataProgram: TOKEN_METADATA_PROGRAM_ID,
-            systemProgram: SystemProgram.programId,
-            rent: SYSVAR_RENT_PUBKEY,
-          } as any)
-          .transaction()
-
-        simTx.feePayer = attendee
-        simTx.recentBlockhash = blockhash
-        simTx.partialSign(mintKeypair)
-
-        const simResult = await connection.simulateTransaction(simTx)
-        console.log('=== DIAGNOSTIC STEP 2: SIMULATION ERR ===', JSON.stringify(simResult.value.err, null, 2))
-        console.log('=== DIAGNOSTIC STEP 2: REAL ON-CHAIN PROGRAM LOGS ===')
-        if (simResult.value.logs) {
-          simResult.value.logs.forEach((line, idx) => console.log(`LOG ${idx}: ${line}`))
-        } else {
-          console.log('No simulation logs returned. simResult:', simResult.value)
-        }
-      } catch (simErr) {
-        console.error('=== DIAGNOSTIC STEP 2: SIMULATION EXECUTION ERROR ===', simErr)
-      }
-
-      // === DIAGNOSTIC STEP 3: Signer Verification ===
-      console.log('=== DIAGNOSTIC STEP 3: SIGNERS ===')
-      console.log('Mint Keypair:', mintKeypair.publicKey.toBase58())
-
-      try {
-        const signature = await wallet.sendTransaction(transaction, connection, {
-          signers: [mintKeypair],
-        })
-        await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
-        return { signature, mint: mintKeypair.publicKey, attendancePda }
-      } catch (sendErr: any) {
-        console.error('=== RAW SEND TRANSACTION ERROR ===', sendErr)
-        if (typeof sendErr?.getLogs === 'function') {
-          try {
-            const logs = await sendErr.getLogs()
-            console.log('=== RAW PROGRAM LOGS FROM getLogs() ===')
-            logs.forEach((l: string, i: number) => console.log(`SEND LOG ${i}: ${l}`))
-          } catch (logErr) {
-            console.error('Failed to call getLogs():', logErr)
-          }
-        }
-        if (sendErr?.logs) {
-          console.log('=== RAW PROGRAM LOGS FROM sendErr.logs ===')
-          sendErr.logs.forEach((l: string, i: number) => console.log(`SEND LOG ${i}: ${l}`))
-        }
-        throw sendErr
-      }
+      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
+      return { signature, mint: mintKeypair.publicKey, attendancePda }
     },
     onSuccess: ({ signature, mint }) => {
       transactionToast(signature)
@@ -270,7 +165,7 @@ export function useEventAttendanceNftProgram() {
       if (msg.includes('already in use') || err?.logs?.some((l: string) => l.includes('already in use'))) {
         toast.error('Already checked in for this event! Badges are 1 per attendee.')
       } else if (msg.includes('Blockhash not found') || msg.includes('Simulation failed')) {
-        toast.error('Simulation failed: Please ensure top-right cluster is set to "devnet" and your wallet has Devnet SOL!')
+        toast.error('Simulation failed: Please ensure cluster is set to "devnet" and your wallet has SOL!')
       } else if (msg.includes('User rejected')) {
         toast.error('Transaction cancelled/rejected in Phantom wallet.')
       } else {

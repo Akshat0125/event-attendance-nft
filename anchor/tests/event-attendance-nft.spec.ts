@@ -43,8 +43,9 @@ describe('event-attendance-nft', () => {
   }, 30000)
 
   it('1. Derives Event PDA and calls create_event - asserts name and organizer match', async () => {
+    const badgeUri = 'ipfs://QmEventAttendanceBadgeFixedUri/metadata.json'
     await program.methods
-      .createEvent(eventName)
+      .createEvent(eventName, badgeUri)
       .accounts({
         organizer: organizer.publicKey,
         event: eventPda,
@@ -55,6 +56,7 @@ describe('event-attendance-nft', () => {
 
     const eventAccount = await program.account.event.fetch(eventPda)
     expect(eventAccount.name).toBe(eventName)
+    expect(eventAccount.badgeUri).toBe(badgeUri)
     expect(eventAccount.organizer.toBase58()).toBe(organizer.publicKey.toBase58())
     expect(eventAccount.attendeeCount).toBe(0)
   })

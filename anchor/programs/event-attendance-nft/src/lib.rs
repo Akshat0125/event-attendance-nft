@@ -10,20 +10,20 @@ use anchor_spl::{
 
 declare_id!("BMwNMcrxpmGu7V9fHpFyGN8dFKt5NrAPNusZSLrUbafz");
 
-pub const FIXED_BADGE_URI: &str = "ipfs://QmEventAttendanceBadgeFixedUri/metadata.json";
-
 #[program]
 pub mod event_attendance_nft {
     use super::*;
 
-    pub fn create_event(ctx: Context<CreateEvent>, name: String) -> Result<()> {
+    pub fn create_event(ctx: Context<CreateEvent>, name: String, badge_uri: String) -> Result<()> {
         require!(name.len() <= 50, EventError::NameTooLong);
+        require!(badge_uri.len() <= 200, EventError::BadgeUriTooLong);
 
         let event = &mut ctx.accounts.event;
         event.organizer = ctx.accounts.organizer.key();
         event.name = name;
         event.attendee_count = 0;
         event.bump = ctx.bumps.event;
+        event.badge_uri = badge_uri;
 
         Ok(())
     }
@@ -59,8 +59,8 @@ pub mod event_attendance_nft {
         let metadata_name = format!("{}{}", truncated_name, suffix);
         let data_v2 = DataV2 {
             name: metadata_name,
-            symbol: "BADGE".to_string(),
-            uri: FIXED_BADGE_URI.to_string(),
+            symbol: "NFTKT".to_string(),
+            uri: ctx.accounts.event.badge_uri.clone(),
             seller_fee_basis_points: 0,
             creators: None,
             collection: None,
@@ -116,7 +116,7 @@ pub mod event_attendance_nft {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String)]
+#[instruction(name: String, badge_uri: String)]
 pub struct CreateEvent<'info> {
     #[account(mut)]
     pub organizer: Signer<'info>,
@@ -124,7 +124,7 @@ pub struct CreateEvent<'info> {
     #[account(
         init,
         payer = organizer,
-        space = 8 + 32 + (4 + 50) + 4 + 1,
+        space = 8 + 32 + (4 + 50) + 4 + 1 + (4 + 200),
         seeds = [b"event", organizer.key().as_ref(), name.as_bytes()],
         bump
     )]
@@ -200,6 +200,7 @@ pub struct Event {
     pub name: String,
     pub attendee_count: u32,
     pub bump: u8,
+    pub badge_uri: String,
 }
 
 #[account]
@@ -214,6 +215,8 @@ pub struct AttendanceRecord {
 pub enum EventError {
     #[msg("Event name exceeds maximum length of 50 characters.")]
     NameTooLong,
+    #[msg("Badge URI exceeds maximum length of 200 characters.")]
+    BadgeUriTooLong,
     #[msg("Attendee count overflow.")]
     Overflow,
 }

@@ -27,13 +27,17 @@ export function EventAttendanceNftUi() {
 
   const handleCreateEvent = () => {
     if (!publicKey) return
-    createEvent.mutate({ name: eventName, organizer: publicKey })
+    createEvent.mutate({ name: eventName, badgeUri: ipfsBadgeUri, organizer: publicKey })
   }
 
   const handleCheckIn = () => {
     if (!publicKey) return
     const org = organizerAddress ? new PublicKey(organizerAddress) : publicKey
-    checkIn.mutate({ eventName: checkInEventName, organizer: org })
+    const [eventPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('event'), org.toBuffer(), Buffer.from(checkInEventName)],
+      programId
+    )
+    checkIn.mutate({ eventPda })
   }
 
   return (

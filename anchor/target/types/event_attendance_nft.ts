@@ -296,6 +296,10 @@ export type EventAttendanceNft = {
         {
           "name": "name",
           "type": "string"
+        },
+        {
+          "name": "badgeUri",
+          "type": "string"
         }
       ]
     }
@@ -336,6 +340,11 @@ export type EventAttendanceNft = {
     },
     {
       "code": 6001,
+      "name": "badgeUriTooLong",
+      "msg": "Badge URI exceeds maximum length of 200 characters."
+    },
+    {
+      "code": 6002,
       "name": "overflow",
       "msg": "Attendee count overflow."
     }
@@ -385,6 +394,10 @@ export type EventAttendanceNft = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "badgeUri",
+            "type": "string"
           }
         ]
       }

@@ -5,12 +5,14 @@ import { AppLayout } from '@/components/app-layout'
 import React from 'react'
 
 export const metadata: Metadata = {
-  title: 'Event Attendance Soulbound NFT',
+  title: 'NFTicket — Solana Soulbound Event Attendance',
   description: 'Solana dApp for Soulbound Event Check-in & Non-transferable Badge Minting',
 }
 
 const links: { label: string; path: string }[] = [
-  { label: 'Event Check-In', path: '/' },
+  { label: 'Home', path: '/' },
+  { label: 'Organizer Portal', path: '/organizer' },
+  { label: 'Attendee Check-In', path: '/check-in' },
   { label: 'Account Explorer', path: '/account' },
 ]
 

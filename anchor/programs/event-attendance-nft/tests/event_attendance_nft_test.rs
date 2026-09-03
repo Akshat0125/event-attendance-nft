@@ -80,6 +80,7 @@ fn test_create_event_and_check_in_success() {
         accounts: create_event_accounts,
         data: event_instructions::CreateEvent {
             name: event_name.clone(),
+            badge_uri: "ipfs://testbadgeuri".to_string(),
         }
         .data(),
     };
@@ -204,7 +205,7 @@ fn test_duplicate_check_in_rejection() {
     let create_event_ix = SdkInstruction {
         program_id: to_sdk_pubkey(&ID),
         accounts: create_event_accounts,
-        data: event_instructions::CreateEvent { name: event_name }.data(),
+        data: event_instructions::CreateEvent { name: event_name, badge_uri: "ipfs://testbadgeuri".to_string() }.data(),
     };
 
     let tx = Transaction::new_signed_with_payer(
@@ -349,7 +350,7 @@ fn test_token_account_frozen_prevents_transfer() {
     let create_event_ix = SdkInstruction {
         program_id: to_sdk_pubkey(&ID),
         accounts: create_event_accounts,
-        data: event_instructions::CreateEvent { name: event_name }.data(),
+        data: event_instructions::CreateEvent { name: event_name, badge_uri: "ipfs://testbadgeuri".to_string() }.data(),
     };
 
     let tx = Transaction::new_signed_with_payer(

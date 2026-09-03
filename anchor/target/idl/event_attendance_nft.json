@@ -290,6 +290,10 @@
         {
           "name": "name",
           "type": "string"
+        },
+        {
+          "name": "badge_uri",
+          "type": "string"
         }
       ]
     }
@@ -330,6 +334,11 @@
     },
     {
       "code": 6001,
+      "name": "BadgeUriTooLong",
+      "msg": "Badge URI exceeds maximum length of 200 characters."
+    },
+    {
+      "code": 6002,
       "name": "Overflow",
       "msg": "Attendee count overflow."
     }
@@ -379,6 +388,10 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "badge_uri",
+            "type": "string"
           }
         ]
       }
