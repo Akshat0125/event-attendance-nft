@@ -238,6 +238,97 @@
       "args": []
     },
     {
+      "name": "close_attendance_record",
+      "discriminator": [
+        214,
+        42,
+        217,
+        55,
+        26,
+        57,
+        103,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "organizer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "event"
+          ]
+        },
+        {
+          "name": "event"
+        },
+        {
+          "name": "attendance_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  110,
+                  100,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "event"
+              },
+              {
+                "kind": "arg",
+                "path": "attendee"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "attendee",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "close_event",
+      "discriminator": [
+        117,
+        114,
+        193,
+        54,
+        49,
+        25,
+        75,
+        194
+      ],
+      "accounts": [
+        {
+          "name": "organizer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "event"
+          ]
+        },
+        {
+          "name": "event",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "create_event",
       "discriminator": [
         49,
@@ -326,6 +417,21 @@
       ]
     }
   ],
+  "events": [
+    {
+      "name": "EventClosed",
+      "discriminator": [
+        136,
+        138,
+        5,
+        113,
+        129,
+        202,
+        80,
+        85
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -341,6 +447,11 @@
       "code": 6002,
       "name": "Overflow",
       "msg": "Attendee count overflow."
+    },
+    {
+      "code": 6003,
+      "name": "UnauthorizedOrganizer",
+      "msg": "Organizer authority does not match event organizer."
     }
   ],
   "types": [
@@ -392,6 +503,30 @@
           {
             "name": "badge_uri",
             "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "event_name",
+            "type": "string"
+          },
+          {
+            "name": "organizer",
+            "type": "pubkey"
+          },
+          {
+            "name": "final_attendee_count",
+            "type": "u32"
+          },
+          {
+            "name": "closed_at",
+            "type": "i64"
           }
         ]
       }

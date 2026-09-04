@@ -244,6 +244,97 @@ export type EventAttendanceNft = {
       "args": []
     },
     {
+      "name": "closeAttendanceRecord",
+      "discriminator": [
+        214,
+        42,
+        217,
+        55,
+        26,
+        57,
+        103,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "organizer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "event"
+          ]
+        },
+        {
+          "name": "event"
+        },
+        {
+          "name": "attendanceRecord",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  110,
+                  100,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "event"
+              },
+              {
+                "kind": "arg",
+                "path": "attendee"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "attendee",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "closeEvent",
+      "discriminator": [
+        117,
+        114,
+        193,
+        54,
+        49,
+        25,
+        75,
+        194
+      ],
+      "accounts": [
+        {
+          "name": "organizer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "event"
+          ]
+        },
+        {
+          "name": "event",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createEvent",
       "discriminator": [
         49,
@@ -332,6 +423,21 @@ export type EventAttendanceNft = {
       ]
     }
   ],
+  "events": [
+    {
+      "name": "eventClosed",
+      "discriminator": [
+        136,
+        138,
+        5,
+        113,
+        129,
+        202,
+        80,
+        85
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -347,6 +453,11 @@ export type EventAttendanceNft = {
       "code": 6002,
       "name": "overflow",
       "msg": "Attendee count overflow."
+    },
+    {
+      "code": 6003,
+      "name": "unauthorizedOrganizer",
+      "msg": "Organizer authority does not match event organizer."
     }
   ],
   "types": [
@@ -398,6 +509,30 @@ export type EventAttendanceNft = {
           {
             "name": "badgeUri",
             "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "eventClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "eventName",
+            "type": "string"
+          },
+          {
+            "name": "organizer",
+            "type": "pubkey"
+          },
+          {
+            "name": "finalAttendeeCount",
+            "type": "u32"
+          },
+          {
+            "name": "closedAt",
+            "type": "i64"
           }
         ]
       }

@@ -481,3 +481,169 @@ fn test_token_account_frozen_prevents_transfer() {
         "Token transfer must fail because soulbound token account is frozen"
     );
 }
+
+#[test]
+fn test_close_attendance_record_and_event() {
+    let (mut svm, organizer, attendee) = setup_svm();
+    let event_name = "Solana Hacker House 2026".to_string();
+
+    let (event_pda, _) = SdkPubkey::find_program_address(
+        &[b"event", organizer.pubkey().as_ref(), event_name.as_bytes()],
+        &to_sdk_pubkey(&ID),
+    );
+
+    // 1. Create Event
+    let create_event_accounts = convert_account_metas(
+        event_accounts::CreateEvent {
+            organizer: to_anchor_pubkey(organizer.pubkey()),
+            event: to_anchor_pubkey(event_pda),
+            system_program: to_anchor_pubkey(solana_sdk::system_program::ID),
+        }
+        .to_account_metas(None),
+    );
+
+    let create_event_ix = SdkInstruction {
+        program_id: to_sdk_pubkey(&ID),
+        accounts: create_event_accounts,
+        data: event_instructions::CreateEvent {
+            name: event_name.clone(),
+            badge_uri: "ipfs://testbadgeuri".to_string(),
+        }
+        .data(),
+    };
+
+    let tx = Transaction::new_signed_with_payer(
+        &[create_event_ix],
+        Some(&organizer.pubkey()),
+        &[&organizer],
+        svm.latest_blockhash(),
+    );
+    svm.send_transaction(tx).unwrap();
+
+    // 2. Perform Check-In
+    svm.expire_blockhash();
+    let mint_keypair = Keypair::new();
+    let (attendance_pda, _) = SdkPubkey::find_program_address(
+        &[b"attendance", event_pda.as_ref(), attendee.pubkey().as_ref()],
+        &to_sdk_pubkey(&ID),
+    );
+    let (mint_auth_pda, _) =
+        SdkPubkey::find_program_address(&[b"mint_authority"], &to_sdk_pubkey(&ID));
+    let attendee_ata = to_sdk_pubkey(anchor_spl::associated_token::get_associated_token_address(
+        &to_anchor_pubkey(attendee.pubkey()),
+        &to_anchor_pubkey(mint_keypair.pubkey()),
+    ));
+    let metadata_program_id = to_sdk_pubkey(anchor_spl::metadata::Metadata::id());
+    let (metadata_pda, _) = SdkPubkey::find_program_address(
+        &[
+            b"metadata",
+            metadata_program_id.as_ref(),
+            mint_keypair.pubkey().as_ref(),
+        ],
+        &metadata_program_id,
+    );
+
+    let check_in_accounts = convert_account_metas(
+        event_accounts::CheckIn {
+            attendee: to_anchor_pubkey(attendee.pubkey()),
+            event: to_anchor_pubkey(event_pda),
+            attendance_record: to_anchor_pubkey(attendance_pda),
+            mint_authority: to_anchor_pubkey(mint_auth_pda),
+            mint: to_anchor_pubkey(mint_keypair.pubkey()),
+            token_account: to_anchor_pubkey(attendee_ata),
+            metadata: to_anchor_pubkey(metadata_pda),
+            token_program: anchor_spl::token::ID,
+            associated_token_program: anchor_spl::associated_token::ID,
+            metadata_program: anchor_spl::metadata::Metadata::id(),
+            system_program: to_anchor_pubkey(solana_sdk::system_program::ID),
+            rent: to_anchor_pubkey(solana_sdk::sysvar::rent::ID),
+        }
+        .to_account_metas(None),
+    );
+
+    let check_in_ix = SdkInstruction {
+        program_id: to_sdk_pubkey(&ID),
+        accounts: check_in_accounts,
+        data: event_instructions::CheckIn {}.data(),
+    };
+
+    let check_in_tx = Transaction::new_signed_with_payer(
+        &[check_in_ix],
+        Some(&attendee.pubkey()),
+        &[&attendee, &mint_keypair],
+        svm.latest_blockhash(),
+    );
+    svm.send_transaction(check_in_tx).unwrap();
+
+    // Verify AttendanceRecord and Event accounts exist
+    assert!(svm.get_account(&attendance_pda).is_some());
+    assert!(svm.get_account(&event_pda).is_some());
+
+    // 3. Close AttendanceRecord
+    svm.expire_blockhash();
+    let close_att_accounts = convert_account_metas(
+        event_accounts::CloseAttendanceRecord {
+            organizer: to_anchor_pubkey(organizer.pubkey()),
+            event: to_anchor_pubkey(event_pda),
+            attendance_record: to_anchor_pubkey(attendance_pda),
+        }
+        .to_account_metas(None),
+    );
+
+    let close_att_ix = SdkInstruction {
+        program_id: to_sdk_pubkey(&ID),
+        accounts: close_att_accounts,
+        data: event_instructions::CloseAttendanceRecord {
+            attendee: to_anchor_pubkey(attendee.pubkey()),
+        }
+        .data(),
+    };
+
+    let close_att_tx = Transaction::new_signed_with_payer(
+        &[close_att_ix],
+        Some(&organizer.pubkey()),
+        &[&organizer],
+        svm.latest_blockhash(),
+    );
+    let close_att_res = svm.send_transaction(close_att_tx);
+    assert!(close_att_res.is_ok(), "close_attendance_record failed: {:?}", close_att_res);
+
+    // Confirm AttendanceRecord account no longer exists or has 0 lamports & system owner
+    let att_acc = svm.get_account(&attendance_pda);
+    assert!(
+        att_acc.is_none() || att_acc.as_ref().unwrap().lamports == 0,
+        "AttendanceRecord account should be closed (lamports == 0)"
+    );
+
+    // 4. Close Event
+    svm.expire_blockhash();
+    let close_event_accounts = convert_account_metas(
+        event_accounts::CloseEvent {
+            organizer: to_anchor_pubkey(organizer.pubkey()),
+            event: to_anchor_pubkey(event_pda),
+        }
+        .to_account_metas(None),
+    );
+
+    let close_event_ix = SdkInstruction {
+        program_id: to_sdk_pubkey(&ID),
+        accounts: close_event_accounts,
+        data: event_instructions::CloseEvent {}.data(),
+    };
+
+    let close_event_tx = Transaction::new_signed_with_payer(
+        &[close_event_ix],
+        Some(&organizer.pubkey()),
+        &[&organizer],
+        svm.latest_blockhash(),
+    );
+    let close_event_res = svm.send_transaction(close_event_tx);
+    assert!(close_event_res.is_ok(), "close_event failed: {:?}", close_event_res);
+
+    // Confirm Event account no longer exists or has 0 lamports
+    let evt_acc = svm.get_account(&event_pda);
+    assert!(
+        evt_acc.is_none() || evt_acc.as_ref().unwrap().lamports == 0,
+        "Event account should be closed (lamports == 0)"
+    );
+}

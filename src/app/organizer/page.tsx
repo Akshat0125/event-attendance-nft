@@ -10,7 +10,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { fetchEventMetadata, getEventStatus, truncateWallet, EventMetadata } from '@/lib/event-metadata'
-import { Upload, QrCode, CheckCircle2, Copy, Loader2, X, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, Plus } from 'lucide-react'
+import { Upload, QrCode, CheckCircle2, Copy, Loader2, X, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, Plus, AlertTriangle, Archive, Trash2, Info, RefreshCw } from 'lucide-react'
 
 // Presets
 const BADGE_PRESETS = [
@@ -28,13 +28,51 @@ const BADGE_PRESETS = [
   },
 ]
 
+const ARCHIVE_KEY = 'nfticket_closed_events_archive'
+
+export interface ClosedEventArchiveItem {
+  id: string
+  eventName: string
+  organizer: string
+  finalAttendeeCount: number
+  closedAt: number // unix timestamp in seconds
+}
+
+export function getClosedEventsArchive(): ClosedEventArchiveItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(ARCHIVE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch (e) {
+    console.error('Error reading closed events archive from localStorage:', e)
+    return []
+  }
+}
+
+export function saveToClosedEventsArchive(item: ClosedEventArchiveItem) {
+  if (typeof window === 'undefined') return
+  try {
+    const current = getClosedEventsArchive()
+    const updated = [item, ...current]
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(updated))
+  } catch (e) {
+    console.error('Error saving closed event archive to localStorage:', e)
+  }
+}
+
 function OrganizerContent() {
   const searchParams = useSearchParams()
   const activeTab = searchParams.get('tab') || 'dashboard'
 
   const wallet = useWallet()
   const { connection } = useConnection()
-  const { program, programId } = useEventAttendanceNftProgram()
+  const {
+    program,
+    programId,
+    closeAttendanceRecordsBatch,
+    closeEvent,
+    fetchAttendanceRecordsForEvent,
+  } = useEventAttendanceNftProgram()
 
   // Time-of-day Greeting Helper
   const [greeting, setGreeting] = useState('Good afternoon')
@@ -85,6 +123,85 @@ function OrganizerContent() {
 
   // Quick QR Modal
   const [activeQrEvent, setActiveQrEvent] = useState<{ name: string; pda: string } | null>(null)
+
+  // Close Event Modal State
+  const [closingEvent, setClosingEvent] = useState<{
+    publicKey: string
+    name: string
+    attendeeCount: number
+  } | null>(null)
+  const [closeStep, setCloseStep] = useState<
+    'confirm' | 'fetching' | 'closing_records' | 'closing_event' | 'success' | 'error'
+  >('confirm')
+  const [totalRecordsToClose, setTotalRecordsToClose] = useState(0)
+  const [closedRecordsCount, setClosedRecordsCount] = useState(0)
+  const [remainingRecords, setRemainingRecords] = useState<{ publicKey: PublicKey; attendee: PublicKey }[]>([])
+  const [closeErrorMsg, setCloseErrorMsg] = useState<string | null>(null)
+
+  const handleCloseEventExecution = async () => {
+    if (!closingEvent || !wallet.publicKey) return
+    const eventPda = new PublicKey(closingEvent.publicKey)
+
+    setCloseErrorMsg(null)
+
+    try {
+      let records = remainingRecords
+      if (records.length === 0 && closedRecordsCount === 0) {
+        setCloseStep('fetching')
+        records = await fetchAttendanceRecordsForEvent(eventPda)
+        setRemainingRecords(records)
+        setTotalRecordsToClose(records.length)
+        setClosedRecordsCount(0)
+      }
+
+      if (records.length > 0) {
+        setCloseStep('closing_records')
+        try {
+          await closeAttendanceRecordsBatch({
+            eventPda,
+            records,
+            onProgress: (doneCount) => {
+              setClosedRecordsCount(doneCount)
+            },
+          })
+          setRemainingRecords([])
+        } catch (err: any) {
+          console.error('Batch close error:', err)
+          if (err.closedCount !== undefined) {
+            setClosedRecordsCount((prev) => prev + err.closedCount)
+            setRemainingRecords(err.remainingRecords || [])
+          }
+          setCloseStep('error')
+          setCloseErrorMsg(err.error?.message || 'Transaction failed while closing attendance records')
+          return
+        }
+      }
+
+      setCloseStep('closing_event')
+      const { snapshot } = await closeEvent({
+        eventPda,
+        eventName: closingEvent.name,
+        attendeeCount: closingEvent.attendeeCount,
+      })
+
+      saveToClosedEventsArchive(snapshot)
+      setOrganizerEvents((prev) => prev.filter((e) => e.publicKey !== closingEvent.publicKey))
+      setCloseStep('success')
+      toast.success(`Event "${closingEvent.name}" closed and archived successfully!`)
+
+      setTimeout(() => {
+        setClosingEvent(null)
+        setCloseStep('confirm')
+        setRemainingRecords([])
+        setClosedRecordsCount(0)
+        setTotalRecordsToClose(0)
+      }, 1500)
+    } catch (err: any) {
+      console.error('Close Event Error:', err)
+      setCloseStep('error')
+      setCloseErrorMsg(err?.message || 'Failed to close event')
+    }
+  }
 
   // Fetch organizer's events from chain
   const fetchEvents = async () => {
@@ -772,6 +889,22 @@ function OrganizerContent() {
                             <QrCode className="w-3.5 h-3.5 shrink-0" />
                             <span>Quick QR</span>
                           </button>
+
+                          <button
+                            onClick={() => {
+                              setClosingEvent({ publicKey: evt.publicKey, name: evt.name, attendeeCount: evt.attendeeCount })
+                              setCloseStep('confirm')
+                              setRemainingRecords([])
+                              setClosedRecordsCount(0)
+                              setTotalRecordsToClose(0)
+                              setCloseErrorMsg(null)
+                            }}
+                            className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-3 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 shrink-0 transition"
+                            title="Close and archive event"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                            <span>Close</span>
+                          </button>
                         </div>
                       </div>
                     )
@@ -803,11 +936,88 @@ function OrganizerContent() {
 
           {/* Analytics Tab View */}
           {activeTab === 'analytics' && (
-            <div className="card-saas p-6 space-y-4 text-center">
-              <h2 className="text-lg font-bold text-[#111827]">Attendance Analytics</h2>
-              <p className="text-xs text-[#6B7280]">
-                Analytics metrics are calculated live from Solana Devnet on-chain event accounts.
-              </p>
+            <div className="space-y-6">
+              <div className="card-saas p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#E5E3DF] pb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-[#111827]">Attendance Analytics</h2>
+                    <p className="text-xs text-[#6B7280]">Overview of live and archived event attendance</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+                  <div className="p-4 bg-[#F6F5F3] border border-[#E5E3DF] rounded-xl space-y-1">
+                    <span className="text-xs text-[#6B7280] font-medium block">Active On-Chain Events</span>
+                    <span className="text-2xl font-extrabold text-[#111827]">{totalEventsCount}</span>
+                  </div>
+                  <div className="p-4 bg-[#F6F5F3] border border-[#E5E3DF] rounded-xl space-y-1">
+                    <span className="text-xs text-[#6B7280] font-medium block">Total Checked-In Attendees</span>
+                    <span className="text-2xl font-extrabold text-emerald-600">{totalCheckedInCount}</span>
+                  </div>
+                  <div className="p-4 bg-[#F6F5F3] border border-[#E5E3DF] rounded-xl space-y-1">
+                    <span className="text-xs text-[#6B7280] font-medium block">Archived Closed Events</span>
+                    <span className="text-2xl font-extrabold text-[#9945FF]">{getClosedEventsArchive().length}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Local History / Archive Section */}
+              <div className="card-saas p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#E5E3DF] pb-4">
+                  <div className="flex items-center gap-2">
+                    <Archive className="w-5 h-5 text-[#111827]" />
+                    <div>
+                      <h3 className="text-base font-bold text-[#111827]">Event History & Local Archive</h3>
+                      <p className="text-xs text-[#6B7280]">Snapshots of closed events saved locally on this device</p>
+                    </div>
+                  </div>
+                </div>
+
+                {getClosedEventsArchive().length === 0 ? (
+                  <div className="py-8 text-center text-[#6B7280] text-xs border border-dashed border-[#E5E3DF] rounded-xl p-6">
+                    No archived events found in local history.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-[#E5E3DF] rounded-xl">
+                    <table className="w-full text-left text-xs text-[#111827]">
+                      <thead className="bg-[#F6F5F3] border-b border-[#E5E3DF] text-[#6B7280] uppercase text-[10px] font-bold">
+                        <tr>
+                          <th className="py-3 px-4">Event Name</th>
+                          <th className="py-3 px-4">Final Attendees</th>
+                          <th className="py-3 px-4">Date Closed</th>
+                          <th className="py-3 px-4">Organizer</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#E5E3DF]">
+                        {getClosedEventsArchive().map((item) => (
+                          <tr key={item.id} className="hover:bg-[#F6F5F3]/50 transition">
+                            <td className="py-3 px-4 font-bold text-[#111827]">{item.eventName}</td>
+                            <td className="py-3 px-4">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {item.finalAttendeeCount} attendees
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-[#6B7280]">
+                              {new Date(item.closedAt * 1000).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-4 font-mono text-[11px] text-[#6B7280]">
+                              {truncateWallet(item.organizer)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Honest Disclaimer Note */}
+                <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed">
+                  <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <span>
+                    Archive is stored locally in this browser. Clearing browser data will remove this history.
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -822,6 +1032,128 @@ function OrganizerContent() {
             </div>
           )}
         </>
+      )}
+
+      {/* Close Event Modal */}
+      {closingEvent && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 min-h-screen overflow-y-auto">
+          <div className="card-saas p-6 max-w-md w-full text-left space-y-5 relative shadow-xl animate-in fade-in zoom-in duration-150 my-auto">
+            <button
+              disabled={closeStep === 'closing_records' || closeStep === 'closing_event' || closeStep === 'fetching'}
+              onClick={() => setClosingEvent(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-[#E5E3DF] pb-4">
+              <div className="p-2.5 bg-red-100 text-red-600 rounded-xl">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#111827]">Close Event</h3>
+                <p className="text-xs text-[#6B7280]">Permanent on-chain account closure</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3 bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg text-xs space-y-1">
+                <div className="font-bold text-[#111827]">{closingEvent.name}</div>
+                <div className="text-[#6B7280] font-mono text-[11px]">{truncateWallet(closingEvent.publicKey)}</div>
+                <div className="text-xs text-slate-700 pt-1">
+                  Attendance Records to close: <strong>{closingEvent.attendeeCount}</strong>
+                </div>
+              </div>
+
+              {closeStep === 'confirm' && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 leading-relaxed font-medium">
+                  This will permanently remove this event and its attendance records from the blockchain. This cannot be undone.
+                </div>
+              )}
+
+              {(closeStep === 'fetching' || closeStep === 'closing_records' || closeStep === 'closing_event') && (
+                <div className="space-y-2.5 p-4 bg-[#F6F5F3] border border-[#E5E3DF] rounded-lg">
+                  <div className="flex items-center gap-2.5 text-xs font-semibold text-[#111827]">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#111827] shrink-0" />
+                    <span>
+                      {closeStep === 'fetching' && 'Fetching attendance records from chain...'}
+                      {closeStep === 'closing_records' && `Closing attendance records... (${closedRecordsCount}/${totalRecordsToClose})`}
+                      {closeStep === 'closing_event' && 'Closing event on-chain & generating snapshot...'}
+                    </span>
+                  </div>
+
+                  {totalRecordsToClose > 0 && (
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-[#111827] h-full transition-all duration-300"
+                        style={{ width: `${Math.round((closedRecordsCount / totalRecordsToClose) * 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {closeStep === 'success' && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2.5 text-xs font-semibold text-emerald-800">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>Event closed and archived to local storage!</span>
+                </div>
+              )}
+
+              {closeStep === 'error' && (
+                <div className="space-y-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>Close process interrupted</span>
+                  </div>
+                  {closedRecordsCount > 0 && (
+                    <p className="text-[11px] text-red-700">
+                      {closedRecordsCount} of {totalRecordsToClose} attendance records were already closed on-chain.
+                    </p>
+                  )}
+                  {closeErrorMsg && <p className="font-mono text-[11px] break-all">{closeErrorMsg}</p>}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E5E3DF]">
+              {closeStep === 'confirm' && (
+                <>
+                  <button
+                    onClick={() => setClosingEvent(null)}
+                    className="bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] px-4 py-2 rounded-lg text-xs font-semibold border border-[#E5E3DF]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCloseEventExecution}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition"
+                  >
+                    Confirm & Permanently Close Event
+                  </button>
+                </>
+              )}
+
+              {closeStep === 'error' && (
+                <>
+                  <button
+                    onClick={() => setClosingEvent(null)}
+                    className="bg-[#EFECE6] hover:bg-[#E5E3DF] text-[#111827] px-4 py-2 rounded-lg text-xs font-semibold border border-[#E5E3DF]"
+                  >
+                    Dismiss
+                  </button>
+                  <button
+                    onClick={handleCloseEventExecution}
+                    className="bg-[#111827] hover:bg-[#1F2937] text-white px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                    <span>Resume Closing {remainingRecords.length > 0 ? `(${remainingRecords.length} Left)` : ''}</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Quick QR Modal */}

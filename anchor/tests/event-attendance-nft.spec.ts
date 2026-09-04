@@ -172,4 +172,50 @@ describe('event-attendance-nft', () => {
     // AccountState 2 = Frozen
     expect(decoded.state).toBe(2)
   })
+
+  it('5. Closes AttendanceRecord PDA via close_attendance_record and asserts account no longer exists', async () => {
+    const [attendancePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('attendance'), eventPda.toBuffer(), attendee.publicKey.toBuffer()],
+      program.programId
+    )
+
+    // Verify record exists beforehand
+    const preAccount = await provider.connection.getAccountInfo(attendancePda)
+    expect(preAccount).not.toBeNull()
+
+    await program.methods
+      .closeAttendanceRecord(attendee.publicKey)
+      .accounts({
+        organizer: organizer.publicKey,
+        event: eventPda,
+        attendanceRecord: attendancePda,
+      } as any)
+      .signers([organizer])
+      .rpc()
+
+    // Assert account no longer exists
+    const postAccount = await provider.connection.getAccountInfo(attendancePda)
+    expect(postAccount).toBeNull()
+    await expect(program.account.attendanceRecord.fetch(attendancePda)).rejects.toThrow()
+  })
+
+  it('6. Closes Event PDA via close_event and asserts account no longer exists', async () => {
+    // Verify event exists beforehand
+    const preAccount = await provider.connection.getAccountInfo(eventPda)
+    expect(preAccount).not.toBeNull()
+
+    await program.methods
+      .closeEvent()
+      .accounts({
+        organizer: organizer.publicKey,
+        event: eventPda,
+      } as any)
+      .signers([organizer])
+      .rpc()
+
+    // Assert account no longer exists
+    const postAccount = await provider.connection.getAccountInfo(eventPda)
+    expect(postAccount).toBeNull()
+    await expect(program.account.event.fetch(eventPda)).rejects.toThrow()
+  })
 })

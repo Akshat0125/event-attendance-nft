@@ -174,10 +174,136 @@ export function useEventAttendanceNftProgram() {
     },
   })
 
+  const closeAttendanceRecordsBatch = async ({
+    eventPda,
+    records,
+    onProgress,
+  }: {
+    eventPda: PublicKey
+    records: { publicKey: PublicKey; attendee: PublicKey }[]
+    onProgress?: (closedCount: number, totalCount: number) => void
+  }) => {
+    if (!program || !wallet.publicKey || !wallet.sendTransaction) {
+      throw new Error('Wallet not connected')
+    }
+
+    const BATCH_SIZE = 15
+    const totalCount = records.length
+    let closedCount = 0
+    const remaining = [...records]
+
+    while (remaining.length > 0) {
+      const batch = remaining.slice(0, BATCH_SIZE)
+      const transaction = new (await import('@solana/web3.js')).Transaction()
+
+      for (const rec of batch) {
+        const ix = await program.methods
+          .closeAttendanceRecord(rec.attendee)
+          .accounts({
+            organizer: wallet.publicKey,
+            event: eventPda,
+            attendanceRecord: rec.publicKey,
+          } as any)
+          .instruction()
+        transaction.add(ix)
+      }
+
+      transaction.feePayer = wallet.publicKey
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+      transaction.recentBlockhash = blockhash
+
+      try {
+        const signature = await wallet.sendTransaction(transaction, connection)
+        await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
+
+        // Remove processed batch from remaining
+        remaining.splice(0, batch.length)
+        closedCount += batch.length
+        if (onProgress) {
+          onProgress(closedCount, totalCount)
+        }
+      } catch (err: any) {
+        console.error('Batch close failed:', err)
+        throw {
+          error: err,
+          closedCount,
+          remainingRecords: remaining,
+        }
+      }
+    }
+
+    return { closedCount, remainingRecords: [] }
+  }
+
+  const closeEvent = async ({
+    eventPda,
+    eventName,
+    attendeeCount,
+  }: {
+    eventPda: PublicKey
+    eventName: string
+    attendeeCount: number
+  }) => {
+    if (!program || !wallet.publicKey || !wallet.sendTransaction) {
+      throw new Error('Wallet not connected')
+    }
+
+    const transaction = await program.methods
+      .closeEvent()
+      .accounts({
+        organizer: wallet.publicKey,
+        event: eventPda,
+      } as any)
+      .transaction()
+
+    transaction.feePayer = wallet.publicKey
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+    transaction.recentBlockhash = blockhash
+
+    const signature = await wallet.sendTransaction(transaction, connection)
+    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed')
+
+    return {
+      signature,
+      snapshot: {
+        id: `${eventPda.toBase58()}-${Date.now()}`,
+        eventName,
+        organizer: wallet.publicKey.toBase58(),
+        finalAttendeeCount: attendeeCount,
+        closedAt: Math.floor(Date.now() / 1000),
+      },
+    }
+  }
+
+  const fetchAttendanceRecordsForEvent = async (eventPda: PublicKey) => {
+    if (!program) return []
+    try {
+      const records = await program.account.attendanceRecord.all([
+        {
+          memcmp: {
+            offset: 8, // Discriminator offset
+            bytes: eventPda.toBase58(),
+          },
+        },
+      ])
+      return records.map((r) => ({
+        publicKey: r.publicKey,
+        attendee: r.account.attendee,
+      }))
+    } catch (err) {
+      console.error('Error fetching attendance records:', err)
+      return []
+    }
+  }
+
   return {
     program,
     programId,
     createEvent,
     checkIn,
+    closeAttendanceRecordsBatch,
+    closeEvent,
+    fetchAttendanceRecordsForEvent,
   }
 }
+

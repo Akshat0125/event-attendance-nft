@@ -113,6 +113,25 @@ pub mod event_attendance_nft {
 
         Ok(())
     }
+
+    pub fn close_attendance_record(
+        _ctx: Context<CloseAttendanceRecord>,
+        attendee: Pubkey,
+    ) -> Result<()> {
+        let _ = attendee;
+        Ok(())
+    }
+
+    pub fn close_event(ctx: Context<CloseEvent>) -> Result<()> {
+        emit!(EventClosed {
+            event_name: ctx.accounts.event.name.clone(),
+            organizer: ctx.accounts.organizer.key(),
+            final_attendee_count: ctx.accounts.event.attendee_count,
+            closed_at: Clock::get()?.unix_timestamp,
+        });
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -194,6 +213,39 @@ pub struct CheckIn<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+#[derive(Accounts)]
+#[instruction(attendee: Pubkey)]
+pub struct CloseAttendanceRecord<'info> {
+    #[account(mut)]
+    pub organizer: Signer<'info>,
+
+    #[account(
+        has_one = organizer @ EventError::UnauthorizedOrganizer
+    )]
+    pub event: Account<'info, Event>,
+
+    #[account(
+        mut,
+        close = organizer,
+        seeds = [b"attendance", event.key().as_ref(), attendee.as_ref()],
+        bump = attendance_record.bump
+    )]
+    pub attendance_record: Account<'info, AttendanceRecord>,
+}
+
+#[derive(Accounts)]
+pub struct CloseEvent<'info> {
+    #[account(mut)]
+    pub organizer: Signer<'info>,
+
+    #[account(
+        mut,
+        close = organizer,
+        has_one = organizer @ EventError::UnauthorizedOrganizer
+    )]
+    pub event: Account<'info, Event>,
+}
+
 #[account]
 pub struct Event {
     pub organizer: Pubkey,
@@ -211,6 +263,14 @@ pub struct AttendanceRecord {
     pub bump: u8,
 }
 
+#[event]
+pub struct EventClosed {
+    pub event_name: String,
+    pub organizer: Pubkey,
+    pub final_attendee_count: u32,
+    pub closed_at: i64,
+}
+
 #[error_code]
 pub enum EventError {
     #[msg("Event name exceeds maximum length of 50 characters.")]
@@ -219,6 +279,8 @@ pub enum EventError {
     BadgeUriTooLong,
     #[msg("Attendee count overflow.")]
     Overflow,
+    #[msg("Organizer authority does not match event organizer.")]
+    UnauthorizedOrganizer,
 }
 
 #[cfg(target_os = "solana")]
